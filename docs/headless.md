@@ -44,3 +44,20 @@ son políticas clínicas ni un estándar de redacción. **La regla Gitleaks sól
 reconoce un marcador de prueba y no debe usarse como política de secretos real.**
 La generación Rulesync se limita a dry-run: no instala ni prueba hooks de agentes.
 Los resultados reales se leen en el artefacto `provider-evidence-<SHA>` de cada CI.
+
+## Índice de Git (sólo alcance)
+
+```sh
+node tools/staged.mjs --vault /ruta/al/repo --git /usr/bin/git --protect 00_KERNEL
+```
+
+La inspección trabaja sobre blobs staged, no sobre la versión corregida pero aún
+no preparada del working tree. Revisa el origen y destino de renombres, borrados,
+modos de archivo, límites de tamaño y entradas ambiguas. No cambia el índice ni
+instala hooks. `scopeStatus: PASS` sólo aprueba alcance; `quality` y `secrets`
+permanecen `NOT_RUN`. No usar esta salida como aprobación completa de un commit.
+
+`profiles/git/pre-commit.example.yaml` es una entrada local opcional que se revisa
+y combina con el gestor existente. No sustituye su configuración ni los chequeos
+editoriales/secretos. Requiere que estas herramientas existan en el checkout; no
+contiene descarga o instalación automática.
