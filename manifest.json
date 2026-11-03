@@ -1,0 +1,9 @@
+{
+  "id": "no-mess-left-behind",
+  "name": "No Mess Left Behind",
+  "version": "0.1.0",
+  "minAppVersion": "1.8.7",
+  "description": "Inspect vault governance configuration without modifying notes or agent settings.",
+  "author": "Felipe González",
+  "isDesktopOnly": true
+}

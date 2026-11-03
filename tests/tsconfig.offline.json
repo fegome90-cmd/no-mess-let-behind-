@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "obsidian": [
+        "tests/fixtures/obsidian.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "../src/**/*.ts",
+    "./fixtures/obsidian.d.ts"
+  ]
+}

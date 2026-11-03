@@ -1,0 +1,25 @@
+{
+  "mode": "reference-only",
+  "repository": "fegome90-cmd/my-skills",
+  "commit": "5211aae8843eca4966d2aee828513582a04a7c8f",
+  "skills": [
+    {
+      "name": "authority-flow-audit",
+      "path": "skills/authority-flow-audit/SKILL.md",
+      "gitBlob": "6b1cc4a6ea5116430012c4a697988bb374866a36",
+      "installed": false
+    },
+    {
+      "name": "ai-work-prompting-gates",
+      "path": "skills/ai-work-prompting-gates/SKILL.md",
+      "gitBlob": "bc6665f2dffe891eb7ba406867063e0fa8d65384",
+      "installed": false
+    },
+    {
+      "name": "work-closeout",
+      "path": "skills/work-closeout/SKILL.md",
+      "gitBlob": "62efe661eb984ba7fc27b8e7de1af71d6e5d96c5",
+      "installed": false
+    }
+  ]
+}

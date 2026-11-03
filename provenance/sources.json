@@ -1,0 +1,44 @@
+{
+  "observedOn": "2026-11-03",
+  "sources": [
+    {
+      "repository": "fegome90-cmd/kit_fundador",
+      "commit": "f3112674e8d12fdd88f98c791c743a86847a5b2d",
+      "paths": [
+        "LEGO-MVP.md",
+        "LEGO-ROADMAP.md",
+        "templates/fastify-core/package.json",
+        "templates/fastify-core/tsconfig.json"
+      ],
+      "use": "principles-and-config-adaptation; no backend runtime"
+    },
+    {
+      "repository": "fegome90-cmd/constitucion-ai",
+      "commit": "39f2e3fd9965fea1be573e79fb3670fc2ccb9924",
+      "paths": [
+        "constitution/AGENTIC-CONSTITUTION.md"
+      ],
+      "gitBlob": "ab9cec3a8bb6b71b11daa492e40c7262b3c83d02",
+      "use": "normative-reference"
+    },
+    {
+      "repository": "fegome90-cmd/my-skills",
+      "commit": "5211aae8843eca4966d2aee828513582a04a7c8f",
+      "paths": [
+        "skills/authority-flow-audit/SKILL.md",
+        "skills/ai-work-prompting-gates/SKILL.md",
+        "skills/work-closeout/SKILL.md"
+      ],
+      "use": "reference-only; see .agents/skills.lock.json"
+    },
+    {
+      "repository": "obsidianmd/obsidian-sample-plugin",
+      "commit": "07ceb81d1fb3384af611ebf665a1ec42a7e5926d",
+      "paths": [
+        "esbuild.config.mjs",
+        "LICENSE"
+      ],
+      "use": "bundler-pattern-adaptation"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+.nmlb-report h3 {
+  margin-top: var(--size-4-4);
+}
+
+.nmlb-report code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.nmlb-report .nmlb-diagnostic {
+  color: var(--text-warning);
+}
