@@ -1,0 +1,41 @@
+name: Headless
+on:
+  push:
+    branches: ['headless/**']
+  pull_request:
+    branches: ['integration/headless-foundation', 'headless/**']
+permissions:
+  contents: read
+jobs:
+  headless:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.22.2'
+      - run: npm install --global pnpm@11.25.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+      - name: Filesystem, subprocess and installer tests (no GUI)
+        run: |
+          if [ -d tests/headless ]; then node --test tests/headless/*.test.mjs; fi
+      - run: pnpm audit --audit-level high
+      - run: git diff --exit-code
+      - name: Export exact source and build for inspection
+        run: |
+          mkdir -p artifacts/headless
+          git archive --format=zip HEAD -o artifacts/headless/source.zip
+          cp main.js manifest.json styles.css artifacts/headless/
+          git rev-parse HEAD > artifacts/headless/COMMIT
+          cd artifacts/headless
+          sha256sum source.zip main.js manifest.json styles.css > SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: headless-${{ github.sha }}
+          path: artifacts/headless/
+          if-no-files-found: error
+          retention-days: 14
