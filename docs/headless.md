@@ -24,3 +24,23 @@ pnpm verify:headless
 
 Incluye lint, tipos contra SDK, pruebas de contrato y bundle; ninguna de esas
 operaciones abre Obsidian. Los tests nuevos utilizan temporales desechables.
+
+## Procesos y proveedores
+
+`tools/lib/runner.mjs` sólo acepta un ejecutable absoluto y argv separado. No usa
+shell, no hereda credenciales del entorno y acota duración/salida; cancelación,
+fallo y timeout no equivalen a PASS. Los detalles de stdout/stderr quedan internos;
+los resúmenes públicos exponen estados y conteos. El proceso no está sandboxed:
+no ejecutar binarios o configuraciones arbitrarios de un vault no confiable.
+
+`tools/provider-smoke.mjs` ejecuta Rulesync, Vale, rumdl y Gitleaks en temporales
+creados por el propio script; no recibe una ruta de vault real. Las versiones y
+flags están centralizados en `tools/lib/providers.mjs`. La CI descarga releases
+fijadas con checksum y conserva el lock npm resuelto de Rulesync como evidencia.
+Esta prueba de compatibilidad no equivale a adoptar sus transitivas congeladas.
+
+Los perfiles de `profiles/` son ejemplos sintéticos para probar contratos. No
+son políticas clínicas ni un estándar de redacción. **La regla Gitleaks sólo
+reconoce un marcador de prueba y no debe usarse como política de secretos real.**
+La generación Rulesync se limita a dry-run: no instala ni prueba hooks de agentes.
+Los resultados reales se leen en el artefacto `provider-evidence-<SHA>` de cada CI.

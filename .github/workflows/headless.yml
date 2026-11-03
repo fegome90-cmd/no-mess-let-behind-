@@ -20,6 +20,15 @@ jobs:
       - run: npm install --global pnpm@11.25.0
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify:headless
+      - name: Real provider compatibility on synthetic fixtures
+        run: bash tools/ci/fetch-providers.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: provider-evidence-${{ github.sha }}
+          path: artifacts/providers/
+          if-no-files-found: warn
+          retention-days: 14
       - run: pnpm audit --audit-level high
       - run: git diff --exit-code
       - name: Export exact source and build for inspection
