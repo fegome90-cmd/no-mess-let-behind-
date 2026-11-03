@@ -77,7 +77,7 @@ for (const [tool, version] of Object.entries(PROVIDER_VERSIONS)) {
         tool === 'vale'
           ? '# Nota\n\nEn el vertiginoso mundo.\n'
           : tool === 'rumdl'
-            ? '#Sin espacio\n'
+            ? '# Nota\n\n### Nivel saltado\n'
             : '# Nota\n\nnmlb_test_ABCDEFGHIJKLMNOP\n';
       for (const [label, text] of [
         ['clean', good],
