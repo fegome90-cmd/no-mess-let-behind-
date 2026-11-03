@@ -19,10 +19,7 @@ jobs:
           node-version: '24.22.2'
       - run: npm install --global pnpm@11.25.0
       - run: pnpm install --frozen-lockfile
-      - run: pnpm verify
-      - name: Filesystem, subprocess and installer tests (no GUI)
-        run: |
-          if [ -d tests/headless ]; then node --test tests/headless/*.test.mjs; fi
+      - run: pnpm verify:headless
       - run: pnpm audit --audit-level high
       - run: git diff --exit-code
       - name: Export exact source and build for inspection
