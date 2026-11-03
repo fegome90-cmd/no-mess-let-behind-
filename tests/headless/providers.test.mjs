@@ -7,6 +7,7 @@ test('plans invoke read-only modes, never install/fix/watch or shell', () => {
   assert(!providerArgs('rulesync').includes('--delete'));
   assert(providerArgs('vale', 'docs/space name.md').includes('./docs/space name.md'));
   assert.equal(providerArgs('rumdl')[0], 'check');
+  assert(providerArgs('rumdl').includes('--no-cache'));
   assert(!providerArgs('rumdl').includes('--fix'));
   assert(providerArgs('gitleaks').includes('--redact=100'));
 });

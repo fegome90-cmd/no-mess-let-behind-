@@ -23,7 +23,7 @@ export function providerArgs(tool, file = 'docs/check.md') {
     case 'vale':
       return ['--config=.vale.ini', '--output=JSON', name];
     case 'rumdl':
-      return ['check', '--config', '.rumdl.toml', '--output-format', 'json', name];
+      return ['check', '--no-cache', '--config', '.rumdl.toml', '--output-format', 'json', name];
     case 'gitleaks':
       return [
         'dir',
