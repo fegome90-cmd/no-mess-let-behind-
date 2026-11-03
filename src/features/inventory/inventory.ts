@@ -14,13 +14,26 @@ export interface SurfaceStatus {
 }
 
 const SURFACES = [
-  { id: 'authority', name: 'Autoridad del vault', owner: 'Responsable del vault', paths: ['AGENTS.md'] },
-  { id: 'rulesync', name: 'Distribución de agentes', owner: 'Rulesync (candidato)',
-    paths: ['rulesync.jsonc', '.rulesync/hooks.json', '.rulesync/hooks.jsonc'] },
+  {
+    id: 'authority',
+    name: 'Autoridad del vault',
+    owner: 'Responsable del vault',
+    paths: ['AGENTS.md'],
+  },
+  {
+    id: 'rulesync',
+    name: 'Distribución de agentes',
+    owner: 'Rulesync (candidato)',
+    paths: ['rulesync.jsonc', '.rulesync/hooks.json', '.rulesync/hooks.jsonc'],
+  },
   { id: 'vale', name: 'Estilo editorial', owner: 'Vale (candidato)', paths: ['.vale.ini'] },
   { id: 'rumdl', name: 'Sintaxis Markdown', owner: 'rumdl (candidato)', paths: ['.rumdl.toml'] },
-  { id: 'precommit', name: 'Validación antes del commit', owner: 'Gestor Git del vault',
-    paths: ['.pre-commit-config.yaml'] },
+  {
+    id: 'precommit',
+    name: 'Validación antes del commit',
+    owner: 'Gestor Git del vault',
+    paths: ['.pre-commit-config.yaml'],
+  },
 ] as const;
 
 /** Presence is evidence of a path, never of valid configuration or enforcement. */
@@ -38,9 +51,12 @@ export async function inspectVault(probe: VaultProbe): Promise<SurfaceStatus[]> 
       }
     }
     const status: SurfaceStatus = {
-      id: surface.id, name: surface.name, owner: surface.owner,
+      id: surface.id,
+      name: surface.name,
+      owner: surface.owner,
       presence: failed ? 'ERROR' : paths.length > 0 ? 'PRESENT' : 'ABSENT',
-      execution: 'NOT_RUN', paths,
+      execution: 'NOT_RUN',
+      paths,
     };
     if (failed) status.code = 'NMLB_PROBE_FAILED';
     else if (paths.includes('.rulesync/hooks.json') && paths.includes('.rulesync/hooks.jsonc')) {

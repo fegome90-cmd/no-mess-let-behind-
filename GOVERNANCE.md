@@ -56,5 +56,6 @@ No se presenta el historial local sintético como clon idéntico al remoto.
 
 No se inventan excepciones aprobadas. La falta de Mac conectado o SDK local limita
 la evidencia y bloquea el gate correspondiente, no lo convierte en exención.
-El bootstrap de dependencias debe resolverse con registro real antes de cerrar
-reproducibilidad. La integración, release y piloto de vault quedan pendientes.
+El bootstrap resolvió dependencias reales en CI; el lock recuperado queda versionado.
+La CI de verificación exige instalación congelada sobre el SHA revisado.
+La integración, release y piloto de vault quedan pendientes.

@@ -1,6 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": [
-    "src/features/inventory/inventory.ts"
-  ]
+  "include": ["src/features/inventory/inventory.ts"]
 }

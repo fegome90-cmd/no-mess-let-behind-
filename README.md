@@ -40,9 +40,9 @@ pnpm install --frozen-lockfile
 pnpm run verify
 ```
 
-La instalación congelada requiere `pnpm-lock.yaml` obtenido del registro, no
-reconstruido a mano. Durante el bootstrap se prepara en una CI aislada; no se
-declara reproducibilidad completa hasta versionar ese artefacto y verificarlo.
+`pnpm-lock.yaml` se obtuvo del registro en una CI aislada y se recuperó como
+artefacto con SHA-256 comprobado. La CI permanente instala con lock congelado,
+no modifica el código y publica el paquete de revisión cuando los gates pasan.
 
 `verify` ejecuta Biome, TypeScript, pruebas y bundle. `pnpm format` modifica solo
 este repositorio y debe usarse intencionalmente; nunca es un hook de un vault.
@@ -64,3 +64,5 @@ sigue `NOT_RUN`. No se ha instalado nada en la estación de Felipe.
 
 La ruta de revisión es `feat/*` → `develop` → `main`. Ninguna rama implica por sí
 sola branch protection activa. No hay publicación ni merge automático.
+Dependabot queda configurado para propuestas mensuales agrupadas hacia develop;
+su activación depende de integrar la configuración en la rama predeterminada.

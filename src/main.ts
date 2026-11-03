@@ -2,7 +2,10 @@ import { Modal, Notice, Plugin } from 'obsidian';
 import { inspectVault, type SurfaceStatus } from './features/inventory/inventory.js';
 
 class InventoryModal extends Modal {
-  constructor(app: Plugin['app'], private readonly rows: SurfaceStatus[]) {
+  constructor(
+    app: Plugin['app'],
+    private readonly rows: SurfaceStatus[],
+  ) {
     super(app);
   }
 
@@ -83,7 +86,8 @@ export default class NoMessLeftBehind extends Plugin {
       const rows = await inspectVault({ exists: (path) => this.app.vault.adapter.exists(path) });
       if (!this.disposed) new InventoryModal(this.app, rows).open();
     } catch {
-      if (!this.disposed) new Notice('NMLB_INSPECTION_FAILED: no fue posible completar la inspección.');
+      if (!this.disposed)
+        new Notice('NMLB_INSPECTION_FAILED: no fue posible completar la inspección.');
     } finally {
       this.inspecting = false;
     }

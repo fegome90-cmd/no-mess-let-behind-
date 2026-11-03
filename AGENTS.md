@@ -46,5 +46,5 @@ reportar revisión propia, no simular independencia.
 Comando completo: `pnpm verify` después de `pnpm install --frozen-lockfile`.
 El ensayo offline documentado no sustituye ese gate. Si faltan SDK, lock, binario o
 runtime, informar `NOT_RUN`/bloqueado y no aprobar promoción. No instalar herramientas
-globales ni modificar políticas para evitar un fallo. Nunca usar `--no-verify`,
+globales en estaciones de trabajo ni modificar políticas para evitar un fallo. Nunca usar `--no-verify`,
 force-push, reset destructivo o `git add -A` sobre una raíz con cambios ajenos.

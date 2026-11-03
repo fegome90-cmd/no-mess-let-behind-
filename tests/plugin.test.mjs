@@ -4,17 +4,29 @@ import Plugin from '../dist/main.js';
 import { modals, notices, reset, textOf } from './fixtures/obsidian.mjs';
 
 function makePlugin(exists = async () => false) {
-  return new Plugin({ vault: { adapter: { exists,
-    read: () => assert.fail('must not read note contents'),
-    write: () => assert.fail('must not write') } } });
+  return new Plugin({
+    vault: {
+      adapter: {
+        exists,
+        read: () => assert.fail('must not read note contents'),
+        write: () => assert.fail('must not write'),
+      },
+    },
+  });
 }
 
 test('loads commands without scanning, persisting or starting background work', () => {
   let calls = 0;
-  const plugin = makePlugin(async () => { calls++; return false; });
+  const plugin = makePlugin(async () => {
+    calls++;
+    return false;
+  });
   plugin.onload();
   assert.equal(calls, 0);
-  assert.deepEqual(plugin.commands.map((c) => c.id), ['inspect-vault', 'show-boundaries']);
+  assert.deepEqual(
+    plugin.commands.map((c) => c.id),
+    ['inspect-vault', 'show-boundaries'],
+  );
   assert.equal(plugin.icons.length, 1);
 });
 
@@ -33,8 +45,13 @@ test('command displays evidence boundaries and present sources, not success clai
 test('simultaneous command invocations do not duplicate scans; lock is released', async () => {
   reset();
   let release;
-  const gate = new Promise((resolve) => { release = resolve; });
-  const plugin = makePlugin(async () => { await gate; return false; });
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const plugin = makePlugin(async () => {
+    await gate;
+    return false;
+  });
   plugin.onload();
   const run = plugin.commands[0].callback;
   const first = run();
@@ -48,7 +65,9 @@ test('simultaneous command invocations do not duplicate scans; lock is released'
 
 test('probe failures are visible and their sensitive messages are discarded', async () => {
   reset();
-  const plugin = makePlugin(async () => { throw new Error('secret-fixture'); });
+  const plugin = makePlugin(async () => {
+    throw new Error('secret-fixture');
+  });
   plugin.onload();
   await plugin.commands[0].callback();
   const text = textOf(modals[0].contentEl);
@@ -67,8 +86,13 @@ test('boundary command is read-only and makes deferred execution explicit', asyn
 test('unloading prevents a pending scan from opening a modal', async () => {
   reset();
   let release;
-  const gate = new Promise((resolve) => { release = resolve; });
-  const plugin = makePlugin(async () => { await gate; return false; });
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const plugin = makePlugin(async () => {
+    await gate;
+    return false;
+  });
   plugin.onload();
   const first = plugin.commands[0].callback();
   plugin.onunload?.();

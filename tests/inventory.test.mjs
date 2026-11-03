@@ -20,17 +20,23 @@ test('configuration presence is not execution evidence', async () => {
 });
 
 test('failed probing is ERROR, not ABSENT or PASS, and never leaks exception text', async () => {
-  const rows = await inspectVault({ exists: async () => { throw new Error('secret-fixture'); } });
+  const rows = await inspectVault({
+    exists: async () => {
+      throw new Error('secret-fixture');
+    },
+  });
   assert(rows.every((row) => row.presence === 'ERROR'));
   assert(rows.every((row) => row.code === 'NMLB_PROBE_FAILED'));
   assert(!JSON.stringify(rows).includes('secret-fixture'));
 });
 
 test('a partial probe error cannot be hidden behind a present config', async () => {
-  const rows = await inspectVault({ exists: async (p) => {
-    if (p === '.rulesync/hooks.jsonc') throw new Error('unreadable');
-    return p === 'rulesync.jsonc';
-  } });
+  const rows = await inspectVault({
+    exists: async (p) => {
+      if (p === '.rulesync/hooks.jsonc') throw new Error('unreadable');
+      return p === 'rulesync.jsonc';
+    },
+  });
   assert.equal(rows.find((row) => row.id === 'rulesync').presence, 'ERROR');
 });
 
@@ -41,8 +47,14 @@ test('two hook definition alternatives require review, not silent precedence', a
 
 test('only fixed, relative paths are probed and no note contents are read', async () => {
   const paths = [];
-  const probe = { exists: async (path) => { paths.push(path); return false; },
-    read: () => assert.fail('content must not be read'), write: () => assert.fail('must not write') };
+  const probe = {
+    exists: async (path) => {
+      paths.push(path);
+      return false;
+    },
+    read: () => assert.fail('content must not be read'),
+    write: () => assert.fail('must not write'),
+  };
   await inspectVault(probe);
   assert(paths.length > 0 && paths.length <= 12);
   assert.equal(new Set(paths).size, paths.length);
@@ -51,7 +63,8 @@ test('only fixed, relative paths are probed and no note contents are read', asyn
 
 test('concurrent inspections keep their results isolated', async () => {
   const [a, b] = await Promise.all([
-    inspectVault({ exists: async () => true }), inspectVault({ exists: async () => false }),
+    inspectVault({ exists: async () => true }),
+    inspectVault({ exists: async () => false }),
   ]);
   assert(a.every((row) => row.presence === 'PRESENT'));
   assert(b.every((row) => row.presence === 'ABSENT'));
