@@ -66,3 +66,10 @@ La ruta de revisión es `feat/*` → `develop` → `main`. Ninguna rama implica 
 sola branch protection activa. No hay publicación ni merge automático.
 Dependabot queda configurado para propuestas mensuales agrupadas hacia develop;
 su activación depende de integrar la configuración en la rama predeterminada.
+
+## Investigación para la siguiente integración
+
+[HookFlow v2: revisión y adopción selectiva](docs/research/2026-11-03-hookflow-review/review.md)
+incorpora Claudian y sus transportes al diseño. Incluye pruebas reproducidas y
+bloqueos de adopción del prototipo; no instala HookFlow ni amplía las capacidades
+de esta base. El runtime del plugin permanece de solo lectura.

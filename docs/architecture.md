@@ -65,3 +65,22 @@ Cero dependencias de ejecución adicionales al host. Cuatro dependencias de buil
 fijadas. Cero servicios. Un workflow de verificación una vez resuelto el lock.
 No actualizaciones automáticas en Obsidian ni generación universal de hooks propia.
 Cada capacidad nueva necesita una prueba que justifique mantener su contrato.
+
+## Investigación HookFlow incorporada al diseño — 2026-11-03
+
+La [revisión de HookFlow v2](research/2026-11-03-hookflow-review/review.md)
+completa el diseño de integración: Claudian se trata como host, con pruebas
+separadas para Claude SDK, Codex app-server y Pi RPC. Inline Edit es un canal
+independiente; un evento poscambio no proporciona bloqueo preventivo.
+
+Se incorporan la matriz de compatibilidad, propiedad de handlers y gates de
+aceptación. **No se incorpora el runtime Python, el instalador Gemini ni el linter
+de ejemplo.** Las 21 pruebas originales pasan, pero diez comprobaciones dirigidas
+identifican bloqueos o requisitos de adopción pendientes. El detalle y su
+reproducción están en el informe; no se interpreta el conteo como una métrica de
+calidad global.
+
+El siguiente incremento propuesto es diagnóstico acotado de Claudian; después,
+un piloto Claude CLI/Claudian en vault sintético. Se mantiene el gestor Git existente
+y se comparan vías mantenidas para Pi antes de añadir un puente. No cambia el
+contrato de solo consulta de existencia ni se habilitan nuevos efectos laterales.
