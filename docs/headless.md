@@ -61,3 +61,56 @@ permanecen `NOT_RUN`. No usar esta salida como aprobación completa de un commit
 y combina con el gestor existente. No sustituye su configuración ni los chequeos
 editoriales/secretos. Requiere que estas herramientas existan en el checkout; no
 contiene descarga o instalación automática.
+
+## Empaquetar e instalar (operación manual)
+
+El paquete contiene exactamente `main.js`, `manifest.json`, `styles.css` y
+`SHA256SUMS`. Crear una carpeta nueva después de compilar; no sobrescribe releases:
+
+```sh
+pnpm build
+node tools/package.mjs --build "$PWD" --out /ruta/a/paquete-nuevo
+```
+
+Primero cerrar Obsidian y deshabilitar el plugin si estuviera habilitado. Revisar
+el paquete, su origen y la ruta del vault. El instalador NO descarga dependencias,
+NO ejecuta el bundle, NO abre Obsidian y NO activa plugins. No existe auto-update.
+El padre de la carpeta de salida y el configDir del vault deben existir.
+
+Previsualización sin escritura (modo predeterminado):
+
+```sh
+node tools/install.mjs --vault /ruta/al/vault --package /ruta/a/paquete-nuevo
+```
+
+Leer el plan, conservar su `planId` y aplicarlo explícitamente:
+
+```sh
+node tools/install.mjs --vault /ruta/al/vault --package /ruta/a/paquete-nuevo \
+  --apply --app-closed --expect PLAN_ID_REVISADO
+```
+
+`--app-closed` es una **declaración del operador**, no una detección automática de
+procesos. Un plan distinto/caducado, checksum incorrecto, destino ajeno, enlace o
+plugin configurado como activo interrumpe la operación. Se usa staging privado,
+rename final, lectura posterior y lock cooperativo. La activación se hace a mano
+después de la revisión; en esta entrega no se ha instalado en ningún vault real.
+
+Retiro: generar un segundo plan con `--remove` (sin `--package`), revisar su ID y
+repetir con `--apply --app-closed --expect ...`. Sólo retira los archivos propios
+cuando todos conservan sus hashes y no hay entradas adicionales. `data.json`,
+cambios manuales u otros archivos bloquean el retiro para revisión humana; no se
+borran para dejar el directorio limpio. No limpia automáticamente locks abandonados.
+
+La repetición sobre el mismo paquete intacto devuelve `NOOP`. Un paquete distinto
+sobre una instalación existente requiere migración futura: no se implementó un
+upgrade que pudiera destruir configuración. El recibo y los checksums prueban
+consistencia de bytes, no firma/autenticidad del editor ni protección frente a un
+propietario malicioso del filesystem. No modificar el árbol durante la operación.
+
+## Estado de integración
+
+Las PR están apiladas para revisión, sin fusionar en develop. Las herramientas
+headless no están enlazadas a comandos de la interfaz. Sus pruebas de filesystem,
+procesos, Git y proveedores no certifican ejecución bajo Obsidian/Claudian ni
+hooks nativos de agentes. El workflow de producto conserva sus gates completos.

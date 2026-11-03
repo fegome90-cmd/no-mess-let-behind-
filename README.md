@@ -26,9 +26,10 @@ que puedan contener datos privados.
 - **Constitución Agéntica v1.1:** autoridades y aplicación local en [GOVERNANCE.md](GOVERNANCE.md).
 - **My Skills y plugins de trabajo:** selección y procedencia en [SKILLS.md](SKILLS.md).
 
-Rulesync, Vale y rumdl siguen siendo proveedores **candidatos**, no dependencias
-instaladas ni adaptadores probados. No hay motor, DSL de políticas, traductor de
-hooks, linter, daemon, servidor MCP ni base de datos propios.
+Rulesync, Vale y rumdl siguen siendo proveedores **candidatos del plugin**. Sus
+contratos headless se prueban por separado, sin habilitarlos en el runtime. No hay
+motor, DSL de políticas, traductor de hooks, linter, daemon, servidor MCP ni base
+de datos propios.
 
 ## Desarrollo
 
@@ -83,3 +84,21 @@ su activación depende de integrar la configuración en la rama predeterminada.
 incorpora Claudian y sus transportes al diseño. Incluye pruebas reproducidas y
 bloqueos de adopción del prototipo; no instala HookFlow ni amplía las capacidades
 de esta base. El runtime del plugin permanece de solo lectura.
+
+## Desarrollo sin ejecutar Obsidian
+
+La serie headless añade herramientas explícitas de diagnóstico, procesos acotados,
+inspección del índice Git, empaquetado e instalación inicial reversible. **No se
+activan al cargar el plugin**, ni convierten configuraciones presentes en hooks
+verificados. No añade dependencias npm al producto.
+
+```sh
+pnpm verify:headless
+```
+
+[Uso y límites de las herramientas](docs/headless.md) ·
+[Plan de cuatro PR](docs/plans/2026-11-03-headless.md).
+
+Los perfiles incluidos son fixtures sintéticos/advisory, no políticas de producción.
+La instalación es dry-run por defecto y requiere paquete revisado, confirmación del
+plan y declaración de aplicación cerrada; nunca autoactiva o instala hooks globales.

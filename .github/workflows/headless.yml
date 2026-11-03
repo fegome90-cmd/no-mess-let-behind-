@@ -30,6 +30,11 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - run: pnpm audit --audit-level high
+      - name: Package the compiled bundle without launching it
+        run: |
+          node tools/package.mjs --build "$PWD" --out "$RUNNER_TEMP/nmlb-package"
+          mkdir -p artifacts/headless/plugin-package
+          cp "$RUNNER_TEMP/nmlb-package/"* artifacts/headless/plugin-package/
       - run: git diff --exit-code
       - name: Export exact source and build for inspection
         run: |
