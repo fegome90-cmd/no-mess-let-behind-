@@ -215,7 +215,7 @@ contrato esperado como observación y no modifican la fuente examinada.
 ```sh
 # Después de extraer e inspeccionar el ZIP exacto en un directorio descartable:
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s <fuente>/tests -v
-PYTHONDONTWRITEBYTECODE=1 python3 probe_hookflow.py   --source <fuente> --out findings-reproduced.json
+PYTHONDONTWRITEBYTECODE=1 python3 docs/research/2026-11-03-hookflow-review/probe_hookflow.py --source <fuente> --out findings-reproduced.json
 ```
 
 [probe_hookflow.py](probe_hookflow.py) es un **artefacto de revisión**, no parte del

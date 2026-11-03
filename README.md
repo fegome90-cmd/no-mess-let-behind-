@@ -48,13 +48,23 @@ no modifica el código y publica el paquete de revisión cuando los gates pasan.
 este repositorio y debe usarse intencionalmente; nunca es un hook de un vault.
 Las pruebas simulan la superficie de Obsidian; **no prueban la aplicación real**.
 
-## Piloto de Obsidian pendiente
+## Pruebas de Obsidian y gate de integración
 
-Solo después de revisar el artefacto y autorizar una instalación, usar un vault
-sintético. Copiar `main.js`, `manifest.json` y `styles.css` al directorio del plugin
-y habilitarlo manualmente. No abrir un vault de trabajo real para probar esta base.
-El manifiesto declara desktop y API mínima 1.8.7; compatibilidad en la aplicación
-sigue `NOT_RUN`. No se ha instalado nada en la estación de Felipe.
+`pnpm test:e2e` carga el bundle compilado en Obsidian **1.14.5** real, con
+`wdio-obsidian-service@3.5.0` y WebdriverIO **10.1.0**. Para la versión mínima:
+
+```sh
+NMLB_OBSIDIAN_VERSION=1.8.7 pnpm test:e2e
+```
+
+El harness crea únicamente fixtures sintéticos y el launcher copia el vault y
+utiliza un perfil aislado. No acepta rutas de vaults de trabajo. Prueba comandos,
+reportes, desactivación/reactivación, reinicio y preservación de bytes; no instala
+Claudian ni certifica hooks de agentes. Genera recibos y capturas en `artifacts/e2e/`.
+
+La CI prueba la composición propuesta con la base en cada PR y repite unitarios,
+build y E2E de ambas versiones después del merge. Se requiere revisar el resultado
+del SHA integrado antes de continuar la serie. No hay merge automático.
 
 ## Continuidad
 

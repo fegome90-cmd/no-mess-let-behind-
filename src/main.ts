@@ -53,6 +53,7 @@ class BoundariesModal extends Modal {
 export default class NoMessLeftBehind extends Plugin {
   private inspecting = false;
   private disposed = false;
+  private activeModal: Modal | null = null;
 
   onload(): void {
     this.disposed = false;
@@ -64,7 +65,7 @@ export default class NoMessLeftBehind extends Plugin {
     this.addCommand({
       id: 'show-boundaries',
       name: 'Ver alcance y límites',
-      callback: () => new BoundariesModal(this.app).open(),
+      callback: () => this.openModal(new BoundariesModal(this.app)),
     });
     this.addRibbonIcon('shield-check', 'Inspeccionar gobernanza del vault', () => {
       void this.inspect();
@@ -73,6 +74,15 @@ export default class NoMessLeftBehind extends Plugin {
 
   onunload(): void {
     this.disposed = true;
+    this.activeModal?.close();
+    this.activeModal = null;
+  }
+
+  private openModal(modal: Modal): void {
+    if (this.disposed) return;
+    this.activeModal?.close();
+    this.activeModal = modal;
+    modal.open();
   }
 
   private async inspect(): Promise<void> {
@@ -84,7 +94,7 @@ export default class NoMessLeftBehind extends Plugin {
     this.inspecting = true;
     try {
       const rows = await inspectVault({ exists: (path) => this.app.vault.adapter.exists(path) });
-      if (!this.disposed) new InventoryModal(this.app, rows).open();
+      if (!this.disposed) this.openModal(new InventoryModal(this.app, rows));
     } catch {
       if (!this.disposed)
         new Notice('NMLB_INSPECTION_FAILED: no fue posible completar la inspección.');

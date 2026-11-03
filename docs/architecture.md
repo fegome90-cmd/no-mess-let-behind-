@@ -61,8 +61,8 @@ Los tests usan un doble explícito de SDK: no sustituyen integración real.
 
 ## Presupuesto de mantenimiento
 
-Cero dependencias de ejecución adicionales al host. Cuatro dependencias de build
-fijadas. Cero servicios. Un workflow de verificación una vez resuelto el lock.
+Cero dependencias de ejecución adicionales al host. Seis dependencias directas de desarrollo
+fijadas (dos sólo para E2E). Cero servicios. Un workflow de verificación una vez resuelto el lock.
 No actualizaciones automáticas en Obsidian ni generación universal de hooks propia.
 Cada capacidad nueva necesita una prueba que justifique mantener su contrato.
 
@@ -84,3 +84,15 @@ El siguiente incremento propuesto es diagnóstico acotado de Claudian; después,
 un piloto Claude CLI/Claudian en vault sintético. Se mantiene el gestor Git existente
 y se comparan vías mantenidas para Pi antes de añadir un puente. No cambia el
 contrato de solo consulta de existencia ni se habilitan nuevos efectos laterales.
+
+## Gate E2E y ciclo de vida — 2026-11-03
+
+El harness mantenido por terceros carga el bundle en Obsidian real y aislado,
+no mediante el doble de tests. Se conserva el Node test runner; no se crea un
+launcher propio. El primer E2E detectó que los modales no se cerraban al desactivar.
+La corrección conserva un único modal por instancia y lo cierra al descargar.
+Las regresiones unitarias y E2E cubren cierre y nueva activación.
+
+El [plan de PR](plans/2026-11-03-integration-pr-sequence.md) fija revisión y tests
+antes y después de cada merge. Los proveedores de agentes siguen NO IMPLEMENTADOS;
+la ejecución real de Obsidian no cambia ese estado.

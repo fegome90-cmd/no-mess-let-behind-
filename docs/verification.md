@@ -45,3 +45,35 @@ están fijadas por SHA; el bootstrap temporal se retiró.
 | Auditoría independiente y autorización de integración | PENDIENTES; revisión propia no equivale a revisión independiente |
 
 No hubo instalaciones en vaults, cambios globales en estaciones, merge ni release.
+
+## Fase de integración por PR — evidencia más reciente
+
+Mac conectado, clon/worktree desechables y toolchain Node24.22.2/pnpm11.25.0 local
+al entorno de prueba. La primera ejecución Obsidian 1.14.5 reprodujo dos fallos
+relacionados: modal retenido al desactivar e interferencia en la reactivación.
+Se añadieron dos regresiones unitarias (RED observados) y se corrigió el lifecycle.
+Después: 15 pruebas unitarias y los seis escenarios E2E tanto en Obsidian 1.8.7 como
+en 1.14.5 pasaron. Son pruebas del producto actual, no E2E de Claudian/proveedores.
+
+La CI `Verify` ahora usa el merge ref de la PR por defecto; después del merge usa
+el SHA del push a develop. Ejecuta instalación congelada, verify y matriz Obsidian.
+Los recibos por SHA y las capturas se publican como artefactos de cada ejecución.
+Los primeros ensayos locales incluyen `sourceDirty: true`; no se presentan como
+validación del commit final. El gate final exige volver a probar el SHA publicado
+sin cambios, y después el SHA realmente integrado. Consultar esas ejecuciones.
+
+### Revisión externa y dependencias
+
+CodeRabbit identificó un gate ausente sobre la composición de la PR y dos errores
+en la reproducción de investigación. La CI ahora verifica HEAD y merge ref por
+separado; el probe HF-R06 exige exit 0 y ausencia del sentinel en stdout **y** stderr
+(cuatro casos RED/GREEN comprobados). El comando del informe usa la ruta desde raíz.
+
+El primer runner WebdriverIO9 introdujo cuatro avisos altos de dependencias; se
+sustituyó por 10.1.0 y se repitieron los E2E. El audit final observa **0 altos/0
+críticos y 3 moderados de desarrollo**: moment del SDK y glob/minimatch del runner.
+No están incluidos en el bundle del plugin; los paths/patrones del harness son
+fijos y sintéticos. No se ocultan ni se fuerza un cambio mayor de transitivas para
+silenciar el scanner. El gate automatizado rechaza avisos altos/críticos; esta
+clasificación de alcance no es una afirmación de ausencia de vulnerabilidades.
+Las actualizaciones se siguen por Dependabot y deben repetir E2E y audit.

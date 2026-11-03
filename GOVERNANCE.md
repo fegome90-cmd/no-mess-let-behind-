@@ -59,3 +59,16 @@ la evidencia y bloquea el gate correspondiente, no lo convierte en exención.
 El bootstrap resolvió dependencias reales en CI; el lock recuperado queda versionado.
 La CI de verificación exige instalación congelada sobre el SHA revisado.
 La integración, release y piloto de vault quedan pendientes.
+
+## Autorización posterior: integración por PR — 2026-11-03
+
+Felipe solicitó organizar las integraciones por PR, revisar cada una y probar la
+ejecución completa antes y después de cada merge. Se autorizan merges condicionados
+hacia develop según [el plan](docs/plans/2026-11-03-integration-pr-sequence.md),
+no releases ni promoción a main. La autorización no convierte un gate pendiente
+en PASS. Esta fase usa clon y worktree reales desechables en el Mac conectado;
+la nota de snapshot local de la fase inicial es histórica.
+
+Los tests pueden instalar dependencias fijadas y el plugin **sólo en el entorno
+sintético aislado**. No modifican configuraciones globales, vaults existentes ni
+confianza de agentes. La estación mantiene su toolchain global sin cambios.

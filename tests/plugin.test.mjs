@@ -100,3 +100,26 @@ test('unloading prevents a pending scan from opening a modal', async () => {
   await first;
   assert.equal(modals.length, 0);
 });
+
+test('unload closes an already open inventory report', async () => {
+  reset();
+  const plugin = makePlugin();
+  plugin.onload();
+  await plugin.commands[0].callback();
+  const report = modals[0];
+  plugin.onunload();
+  assert.equal(report.closed, true);
+});
+
+test('unload closes the boundary dialog and repeated commands keep one active dialog', async () => {
+  reset();
+  const plugin = makePlugin();
+  plugin.onload();
+  await plugin.commands[1].callback();
+  const first = modals[0];
+  await plugin.commands[1].callback();
+  assert.equal(first.closed, true);
+  const second = modals[1];
+  plugin.onunload();
+  assert.equal(second.closed, true);
+});

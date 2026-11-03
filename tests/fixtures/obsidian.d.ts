@@ -12,6 +12,7 @@ declare module 'obsidian' {
     contentEl: HTMLElement;
     constructor(app: App);
     open(): void;
+    close(): void;
   }
   export class Notice {
     constructor(message: string);

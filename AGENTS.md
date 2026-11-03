@@ -19,7 +19,8 @@ configuración de usuario, credenciales ni material clínico desde otros proyect
 3. Observe/Reflect: TDD para comportamiento, `pnpm verify`, revisión del diff y
    simplificación. No sustituir revisión por lint. Usar fixtures sintéticos.
 4. Reconcile/Handoff: actualizar evidencia y límites, commit acotado y PR a develop.
-   Merge, release e instalación en un vault requieren autorización adicional.
+   Merges a develop: autorización condicionada de Felipe y gates pre/post del plan
+   de integraciones. Release, main y vaults reales requieren autorización adicional.
 
 ## Fronteras del producto
 

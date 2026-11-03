@@ -34,7 +34,12 @@ export class Modal {
     this.app = app;
     this.contentEl = element();
   }
+  close() {
+    this.closed = true;
+    this.onClose?.();
+  }
   open() {
+    this.closed = false;
     modals.push(this);
     this.onOpen?.();
   }

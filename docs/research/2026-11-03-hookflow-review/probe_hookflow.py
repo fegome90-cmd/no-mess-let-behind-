@@ -78,7 +78,7 @@ with tempfile.TemporaryDirectory(prefix='hf-review-') as tmp:
     p=subprocess.run([sys.executable,str(source/'hookflow/gemini_bridge.py'),'--root',str(r),'--dry-run'],
                      capture_output=True,text=True,env=env,timeout=5)
     record('HF-R06','Dry-run diagnostics must not print unrelated config values',
-           {'sentinel_in_stdout':sentinel in p.stdout,'exit_code':p.returncode},sentinel not in p.stdout)
+           {'sentinel_in_stdout':sentinel in p.stdout,'sentinel_in_stderr':sentinel in p.stderr,'exit_code':p.returncode},p.returncode==0 and sentinel not in p.stdout and sentinel not in p.stderr)
 
     value=git_quality.lint_markdown('Primera línea  \nSegunda línea\n')
     record('HF-R07','Valid Markdown hard break must not be rejected as accidental whitespace',value,not value)
