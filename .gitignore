@@ -1,0 +1,14 @@
+node_modules/
+dist/
+main.js
+*.tsbuildinfo
+.superpowers/
+.worktrees/
+coverage/
+artifacts/
+.DS_Store
+.env
+.env.*
+!.env.example
+
+.obsidian-cache/

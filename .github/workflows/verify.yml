@@ -1,0 +1,77 @@
+name: Verify
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: ${{ github.event_name == 'pull_request' && fromJSON('["head","merge"]') || fromJSON('["integrated"]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Verify reviewed HEAD and proposed merge separately; pushes verify integrated SHA.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: ${{ matrix.revision == 'head' && github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.22.2'
+      - name: Install pinned toolchain in disposable runner
+        run: npm install --global pnpm@11.25.0
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint, types, contract tests and real SDK build
+        run: pnpm verify
+      - name: Audit development and production dependencies
+        run: pnpm audit --audit-level high
+      - name: Verify no tracked source changed
+        run: git diff --exit-code
+      - name: Package review artifact (not a release)
+        run: |
+          mkdir -p artifacts
+          cp main.js manifest.json styles.css artifacts/
+          cd artifacts
+          sha256sum main.js manifest.json styles.css > SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nmlb-review-${{ matrix.revision }}-${{ matrix.revision == 'head' && github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+  obsidian-e2e:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        obsidian: ['1.8.7', '1.14.5']
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.22.2'
+      - run: npm install --global pnpm@11.25.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Run compiled plugin in isolated real Obsidian
+        env:
+          NMLB_OBSIDIAN_VERSION: ${{ matrix.obsidian }}
+        run: xvfb-run -a pnpm test:e2e
+      - run: git diff --exit-code
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: obsidian-e2e-${{ matrix.obsidian }}-${{ github.sha }}
+          path: artifacts/e2e/
+          if-no-files-found: warn
+          retention-days: 14

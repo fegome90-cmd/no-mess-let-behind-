@@ -1,0 +1,126 @@
+{
+  "source": "hookflow_reference",
+  "python": "3.13.5",
+  "source_files_sha256": {
+    "__init__.py": "3d6aab72072104377682cde701f80bf9d8ec69eb19c4bb3078136c504a056b69",
+    "claudian_doctor.py": "c06cd1848975d6eb52ce2bdc4685c4778d055ebfde356159c2940bc3f01b65dc",
+    "dispatch.py": "3e965ad68301c9a8f8334c5e5f48a21509c0bd8ebddc7a28539598a66e93f1f0",
+    "gemini_bridge.py": "5ed8006e9a5f81f59de26498cb24e6d0a513a67f16046c66dc62c142e895234a",
+    "git_quality.py": "5bb0f2da59f3c740f6e9f62f5a6bc11e8de5849e4e23eba69a0c0fa5928813d5",
+    "policy.json": "f062cf94a0ba2a361d6981e29340f82e40da1a8217d1136d6d6b0fcf14df7ecd"
+  },
+  "upstream_suite": {
+    "tests": 21,
+    "passed": 21,
+    "failed": 0
+  },
+  "additional_checks": [
+    {
+      "id": "HF-R01",
+      "expected": "Reject deletion staged under protected path",
+      "observed": {},
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R02",
+      "expected": "Reject rename whose source is protected",
+      "observed": {},
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R03",
+      "expected": "Reject apply_patch move destination under protected path",
+      "observed": {
+        "paths": [
+          "docs/a.md"
+        ],
+        "decision": "allow"
+      },
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R04",
+      "expected": "Invalid policy gives governed denial (exit 2, no traceback)",
+      "observed": {
+        "exit_code": 1,
+        "traceback": true,
+        "stdout": ""
+      },
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R05",
+      "expected": "Installer must not write outside root through a symlink",
+      "observed": {
+        "outside_file_changed": true,
+        "exception": null
+      },
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R06",
+      "expected": "Dry-run diagnostics must not print unrelated config values",
+      "observed": {
+        "sentinel_in_stdout": true,
+        "exit_code": 0
+      },
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R07",
+      "expected": "Valid Markdown hard break must not be rejected as accidental whitespace",
+      "observed": [
+        "L1: espacios al final de la línea"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R08",
+      "expected": "Protected code/example block excluded from prose lint",
+      "observed": [
+        "L2: falta espacio después del encabezado Markdown",
+        "L3: expresión editorial no permitida: 'en el vertiginoso mundo'"
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R09",
+      "expected": "A mention in echo must not be recognized as a dispatcher definition",
+      "observed": {
+        "check": "hookflow:PreToolUse",
+        "status": "pass",
+        "detail": "HookFlow definido una vez; aún falta la prueba en Claudian."
+      },
+      "status": "FAIL"
+    },
+    {
+      "id": "HF-R10",
+      "expected": "Evidence supports session/action correlation without raw prompts",
+      "observed": {
+        "record_keys": [
+          "at",
+          "decision",
+          "hook_event_name",
+          "reason_class",
+          "stage",
+          "tool_name"
+        ]
+      },
+      "status": "FAIL"
+    }
+  ],
+  "summary": {
+    "checks": 10,
+    "passed": 0,
+    "failed": 10
+  },
+  "scope": "Synthetic integration-acceptance probes; original snapshot unmodified; not agent E2E.",
+  "input_archive": {
+    "name": "HookFlow_Prototipo_Referencia_v2_Claudian.zip",
+    "sha256": "d4d7e03b8b57ad3b83289b98930be0522185b3f0252f3e02d22a7ba9d355d752"
+  },
+  "documents_sha256": {
+    "HookFlow_Flujo_Completo_v2.md": "ad1e1c34cef5ce48c8cfe6c8f1295b1c0ac7862d222836db2a99b2965921e4ca",
+    "HookFlow_Claudian_Compatibilidad_v2.md": "9ddb241453a7617c3f6d962214f02be91e71fa41af9739bcac9d6e44315e00f2"
+  }
+}
