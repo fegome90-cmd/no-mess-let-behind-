@@ -23,7 +23,7 @@ const fail = (code) => {
 function validateManifest(bytes) {
   let manifest;
   try {
-    manifest = JSON.parse(bytes.toString('utf8'));
+    manifest = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     fail('NMLB_MANIFEST');
   }

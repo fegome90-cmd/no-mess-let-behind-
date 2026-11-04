@@ -168,3 +168,16 @@ test('packager never overwrites an existing package directory', async (t) => {
   await assert.rejects(packageBuild(s.build, s.packageDir), /NMLB_OUTPUT_EXISTS/);
   assert.deepEqual(await readFile(path.join(s.packageDir, 'SHA256SUMS')), before);
 });
+
+test('packager rejects damaged UTF-8 manifests instead of replacing invalid bytes', async (t) => {
+  const s = await setup(t);
+  const invalid = Buffer.concat([
+    Buffer.from('{"id":"no-mess-left-behind","version":"0.1.0","name":"'),
+    Buffer.from([0x80]),
+    Buffer.from('"}'),
+  ]);
+  await put(s.build, 'manifest.json', invalid);
+  const output = path.join(s.root, 'damaged-package');
+  await assert.rejects(packageBuild(s.build, output), /NMLB_MANIFEST/);
+  await assert.rejects(access(output));
+});

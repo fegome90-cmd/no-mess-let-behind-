@@ -63,9 +63,11 @@ utiliza un perfil aislado. No acepta rutas de vaults de trabajo. Prueba comandos
 reportes, desactivación/reactivación, reinicio y preservación de bytes; no instala
 Claudian ni certifica hooks de agentes. Genera recibos y capturas en `artifacts/e2e/`.
 
-La CI prueba la composición propuesta con la base en cada PR y repite unitarios,
-build y E2E de ambas versiones después del merge. Se requiere revisar el resultado
-del SHA integrado antes de continuar la serie. No hay merge automático.
+La CI `Verify` de producto prueba la composición propuesta hacia develop/main y
+repite unitarios, build y E2E de ambas versiones después del merge. La rama aislada
+`integration/headless-foundation` usa `Headless`: verifica HEAD, composición y
+commit integrado sin abrir Obsidian. Sus resultados no sustituyen los E2E nativos
+pendientes de promoción. No hay merge automático.
 
 ## Continuidad
 

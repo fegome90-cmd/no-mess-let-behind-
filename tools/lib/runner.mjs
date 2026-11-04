@@ -10,6 +10,7 @@ export async function runBounded({
   timeoutMs = 10_000,
   maxBytes = 1_048_576,
   signal,
+  env = {},
 }) {
   if (
     !path.isAbsolute(executable) ||
@@ -28,6 +29,21 @@ export async function runBounded({
     maxBytes > 16_777_216
   )
     throw new BoundaryError('NMLB_LIMIT');
+  // A Git-specific caller may pass its validated effective index, never the ambient environment.
+  if (!env || typeof env !== 'object' || Array.isArray(env)) throw new BoundaryError('NMLB_ENV');
+  const selectedEnv = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (
+      key !== 'GIT_INDEX_FILE' ||
+      typeof value !== 'string' ||
+      !path.isAbsolute(value) ||
+      value.length > 4096 ||
+      [...value].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
+    ) {
+      throw new BoundaryError('NMLB_ENV');
+    }
+    selectedEnv[key] = value;
+  }
   const root = await canonicalRoot(cwd);
   if (signal?.aborted) return { status: 'ABORTED', exitCode: null, stdout: '', stderr: '' };
   return new Promise((resolve) => {
@@ -51,6 +67,7 @@ export async function runBounded({
         LANG: 'C.UTF-8',
         TZ: 'UTC',
         NO_COLOR: '1',
+        ...selectedEnv,
         ...(process.platform === 'win32' ? { SystemRoot: process.env.SystemRoot } : {}),
       },
     });
@@ -64,6 +81,9 @@ export async function runBounded({
     };
     const finish = (exitCode) => {
       if (settled) return;
+      // A leader's close does not mean its process group has stopped. Enforce
+      // cleanup before cancelling escalation, including ignored-stdio descendants.
+      if (terminal) kill('SIGKILL');
       settled = true;
       clearTimeout(deadline);
       clearTimeout(escalation);

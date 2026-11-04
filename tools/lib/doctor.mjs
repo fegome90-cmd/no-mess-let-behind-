@@ -28,6 +28,11 @@ export async function inspectClaudian(root, configDir = '.obsidian') {
     metadata: manifest.state === 'READ' ? (valid ? 'VALID' : 'INVALID') : manifest.state,
     ...(valid ? { version: manifest.value.version } : {}),
     ...(manifest.code ? { code: manifest.code } : {}),
+    ...(community.state === 'ERROR'
+      ? { communityCode: community.code }
+      : community.state === 'READ' && !configured
+        ? { communityCode: 'NMLB_COMMUNITY_SCHEMA' }
+        : {}),
     enabled: configured
       ? community.value.includes('realclaudian')
         ? 'CONFIGURED'

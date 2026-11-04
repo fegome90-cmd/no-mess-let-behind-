@@ -90,7 +90,10 @@ export async function readJson(root, relative, maxBytes) {
       : { state: 'ERROR', code: errorCode(error) };
   }
   try {
-    return { state: 'READ', value: JSON.parse(bytes.toString('utf8')) };
+    return {
+      state: 'READ',
+      value: JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
+    };
   } catch {
     return { state: 'ERROR', code: 'NMLB_JSON' };
   }
