@@ -128,3 +128,24 @@ export function validateFixtureHooks(claude, codex) {
     throw new BoundaryError('NMLB_RULESYNC_CONTENT');
   }
 }
+
+const ASSERTION_REASONS = new Set([
+  'ABSOLUTE_EXECUTABLE_REQUIRED',
+  'VERSION_COMMAND_FAILED',
+  'VERSION_MISMATCH',
+  'PREVIEW_FAILED',
+  'PREVIEW_MUTATED_FIXTURE',
+  'SCRATCH_GENERATION_FAILED',
+  'PLAN_CHANGED',
+  'ENGINE_RESULT_MISMATCH',
+  'VALIDATOR_MUTATED_FIXTURE',
+]);
+
+export function providerFailureCode(error) {
+  if (error?.code === 'ERR_ASSERTION') {
+    // Node appends actual/expected diffs even with a custom assertion message.
+    const reason = String(error.message).split('\n', 1)[0];
+    return ASSERTION_REASONS.has(reason) ? reason : 'ERR_ASSERTION';
+  }
+  return error?.code ?? 'NMLB_PROVIDER_SMOKE';
+}

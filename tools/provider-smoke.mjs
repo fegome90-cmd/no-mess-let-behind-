@@ -9,6 +9,7 @@ import {
   PROVIDER_VERSIONS,
   parseFindings,
   providerArgs,
+  providerFailureCode,
   validateFixtureHooks,
   validateRulesyncPreview,
 } from './lib/providers.mjs';
@@ -131,7 +132,7 @@ for (const [tool, version] of Object.entries(PROVIDER_VERSIONS)) {
     row.phase = 'complete';
     row.status = 'PASS';
   } catch (error) {
-    row.code = error.code ?? 'NMLB_PROVIDER_SMOKE';
+    row.code = providerFailureCode(error);
     process.exitCode = 1;
   } finally {
     await rm(cwd, { recursive: true, force: true });
