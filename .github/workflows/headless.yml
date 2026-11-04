@@ -1,35 +1,51 @@
 name: Headless
 on:
   push:
-    branches: ['headless/**']
+    branches: ['headless/**', 'integration/headless-foundation', 'develop', 'main']
   pull_request:
-    branches: ['integration/headless-foundation', 'headless/**']
+    branches: ['integration/headless-foundation', 'headless/**', 'develop', 'main']
 permissions:
   contents: read
 jobs:
   headless:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: ${{ github.event_name == 'pull_request' && fromJSON('["head","merge"]') || fromJSON('["committed"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+          ref: ${{ matrix.revision == 'head' && github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '24.22.2'
       - run: npm install --global pnpm@11.25.0
       - run: pnpm install --frozen-lockfile
-      - run: pnpm verify:headless
+      - name: Verify source and headless regressions
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/headless
+          pnpm verify:headless | tee artifacts/headless/verify.log
       - name: Real provider compatibility on synthetic fixtures
+        if: hashFiles('tools/ci/fetch-providers.sh') != ''
         run: bash tools/ci/fetch-providers.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: provider-evidence-${{ github.sha }}
+          name: provider-evidence-${{ matrix.revision }}-${{ matrix.revision == 'head' && github.event.pull_request.head.sha || github.sha }}
           path: artifacts/providers/
           if-no-files-found: warn
           retention-days: 14
       - run: pnpm audit --audit-level high
+      - name: Package the compiled bundle without launching it
+        if: hashFiles('tools/package.mjs') != ''
+        run: |
+          node tools/package.mjs --build "$PWD" --out "$RUNNER_TEMP/nmlb-package"
+          mkdir -p artifacts/headless/plugin-package
+          cp "$RUNNER_TEMP/nmlb-package/"* artifacts/headless/plugin-package/
       - run: git diff --exit-code
       - name: Export exact source and build for inspection
         run: |
@@ -41,7 +57,7 @@ jobs:
           sha256sum source.zip main.js manifest.json styles.css > SHA256SUMS
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: headless-${{ github.sha }}
+          name: headless-${{ matrix.revision }}-${{ matrix.revision == 'head' && github.event.pull_request.head.sha || github.sha }}
           path: artifacts/headless/
           if-no-files-found: error
           retention-days: 14

@@ -64,3 +64,67 @@ export function parseFindings(tool, result) {
     return error;
   }
 }
+
+/** Fixture contract for Rulesync 43.6.0; this validates a plan, not its unreported file contents. */
+export function validateRulesyncPreview(text) {
+  const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  try {
+    const value = JSON.parse(text);
+    if (
+      !object(value) ||
+      value.success !== true ||
+      value.error !== undefined ||
+      value.command !== 'generate' ||
+      value.version !== PROVIDER_VERSIONS.rulesync ||
+      !object(value.data?.features?.hooks) ||
+      value.data?.plan?.version !== 2
+    )
+      throw new Error();
+    const operations = value.data.plan.operations;
+    if (!Array.isArray(operations) || operations.length < 2 || operations.length > 20)
+      throw new Error();
+    for (const op of operations) {
+      if (
+        !object(op) ||
+        op.action !== 'write' ||
+        !['file', 'key'].includes(op.kind) ||
+        op.feature !== 'hooks' ||
+        (op.kind === 'key' && typeof op.key !== 'string')
+      )
+        throw new Error();
+      relativePath(op.path);
+    }
+    for (const target of ['.claude/settings.json', '.codex/hooks.json']) {
+      if (!operations.some((op) => op.kind === 'file' && op.path === target)) throw new Error();
+    }
+    return { operations };
+  } catch {
+    throw new BoundaryError('NMLB_RULESYNC_PREVIEW');
+  }
+}
+
+/** Run only on files generated inside a disposable fixture, never user settings. */
+export function validateFixtureHooks(claude, codex) {
+  const commands = (value) => {
+    const groups = value?.hooks?.PreToolUse;
+    if (!Array.isArray(groups)) throw new BoundaryError('NMLB_RULESYNC_CONTENT');
+    return groups
+      .flatMap((group) => {
+        if (!Array.isArray(group?.hooks)) throw new BoundaryError('NMLB_RULESYNC_CONTENT');
+        return group.hooks.map((hook) => {
+          if (hook?.type !== 'command' || typeof hook.command !== 'string')
+            throw new BoundaryError('NMLB_RULESYNC_CONTENT');
+          return hook.command;
+        });
+      })
+      .sort();
+  };
+  if (
+    claude?.fixture !== 'KEEP_UNRELATED' ||
+    JSON.stringify(commands(claude)) !==
+      JSON.stringify(['echo KEEP', 'echo NMLB_MANAGED_FIXTURE']) ||
+    JSON.stringify(commands(codex)) !== JSON.stringify(['echo NMLB_MANAGED_FIXTURE'])
+  ) {
+    throw new BoundaryError('NMLB_RULESYNC_CONTENT');
+  }
+}

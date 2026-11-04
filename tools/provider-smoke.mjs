@@ -5,7 +5,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { PROVIDER_VERSIONS, parseFindings, providerArgs } from './lib/providers.mjs';
+import {
+  PROVIDER_VERSIONS,
+  parseFindings,
+  providerArgs,
+  validateFixtureHooks,
+  validateRulesyncPreview,
+} from './lib/providers.mjs';
 import { runBounded, summarizeRun } from './lib/runner.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -51,16 +57,32 @@ for (const [tool, version] of Object.entries(PROVIDER_VERSIONS)) {
       await mkdir(path.join(cwd, '.claude'));
       await writeFile(
         path.join(cwd, '.claude/settings.json'),
-        '{"hooks":{"PreToolUse":[{"hooks":[{"type":"command","command":"echo KEEP"}]}]}}',
+        '{"fixture":"KEEP_UNRELATED","hooks":{"PreToolUse":[{"hooks":[{"type":"command","command":"echo KEEP"}]}]}}',
       );
       const before = await snapshot(cwd);
       row.phase = 'preview';
       const preview = await call(providerArgs(tool));
       row.execution = summarizeRun(preview);
       assert.equal(preview.status, 'OK', 'PREVIEW_FAILED');
-      assert.equal(typeof JSON.parse(preview.stdout), 'object', 'PREVIEW_NOT_JSON');
+      const plan = validateRulesyncPreview(preview.stdout);
       assert.deepEqual(await snapshot(cwd), before, 'PREVIEW_MUTATED_FIXTURE');
-      row.checks.push('version', 'dry-run JSON', 'foreign config preserved', 'no writes');
+      // Plans list paths/keys, not hook payloads. Check payloads by generating only
+      // in this disposable fixture; no native hook or user vault is executed.
+      row.phase = 'scratch-generation';
+      const generated = await call(providerArgs(tool).filter((arg) => arg !== '--dry-run'));
+      assert.equal(generated.status, 'OK', 'SCRATCH_GENERATION_FAILED');
+      assert.deepEqual(validateRulesyncPreview(generated.stdout), plan, 'PLAN_CHANGED');
+      validateFixtureHooks(
+        JSON.parse(await readFile(path.join(cwd, '.claude/settings.json'), 'utf8')),
+        JSON.parse(await readFile(path.join(cwd, '.codex/hooks.json'), 'utf8')),
+      );
+      row.checks.push(
+        'version',
+        'versioned plan and both targets',
+        'dry-run no writes',
+        'scratch output matches plan',
+        'foreign and managed handlers preserved',
+      );
     } else {
       await mkdir(path.join(cwd, 'docs'));
       if (tool === 'vale') {
