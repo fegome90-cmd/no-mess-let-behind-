@@ -1,0 +1,6 @@
+{
+  "targets": ["claudecode", "codexcli"],
+  "features": ["hooks"],
+  "delete": false,
+  "preserveUnownedHooks": true
+}

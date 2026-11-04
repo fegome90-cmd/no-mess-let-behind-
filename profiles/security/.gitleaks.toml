@@ -1,0 +1,5 @@
+title = "NMLB synthetic engine-contract fixture ONLY"
+[[rules]]
+id = "nmlb-synthetic-token"
+description = "Synthetic test token, never a real credential"
+regex = '''nmlb_test_[A-Z]{16}'''
