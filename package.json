@@ -20,7 +20,10 @@
     "test:e2e": "node --test tests/e2e/*.test.mjs",
     "test:headless": "node --test tests/headless/*.test.mjs",
     "verify:headless": "pnpm verify && pnpm test:headless",
-    "doctor": "node tools/doctor.mjs"
+    "doctor": "node tools/doctor.mjs",
+    "package:plugin": "node tools/package.mjs",
+    "install:plugin": "node tools/install.mjs",
+    "inspect:staged": "node tools/staged.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.6",
