@@ -88,10 +88,18 @@ export async function inspectIndex(
   }
   // Git exports temporary indices for --only/-a. Resolve relative to the caller,
   // constrain to this worktree's gitdir, and never silently fall back to index.
-  const requested =
+  let requested =
     context.GIT_INDEX_FILE === undefined
       ? path.join(gitDir, 'index')
       : path.resolve(invocationCwd, context.GIT_INDEX_FILE);
+  if (context.GIT_INDEX_FILE !== undefined) {
+    try {
+      // Canonicalize ancestors, not the final index: its symlink check remains mandatory.
+      requested = path.join(await realpath(path.dirname(requested)), path.basename(requested));
+    } catch {
+      throw new BoundaryError('NMLB_GIT_INDEX_PATH');
+    }
+  }
   const indexRelative = path.relative(gitDir, requested).split(path.sep).join('/');
   try {
     relativePath(indexRelative);

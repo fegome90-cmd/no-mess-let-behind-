@@ -18,5 +18,6 @@ No se ejecuta ningún hook ni agente; no se escribe en vaults del usuario.
 
 Referencias fijadas: dyoshikawa/rulesync@v43.6.0, src/types/json-output.ts y
  docs/reference/cli-commands.md (Mutation plan in JSON output).
-Los 4 binarios de proveedores se prueban realmente en CI; las regresiones unitarias
+Los cuatro proveedores se prueban realmente en CI: tres binarios nativos y
+Rulesync instalado como paquete npm. Las regresiones unitarias
 no sustituyen ese recorrido. El perfil Gitleaks continúa sintético, no productivo.

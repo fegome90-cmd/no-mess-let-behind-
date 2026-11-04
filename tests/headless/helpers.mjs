@@ -1,9 +1,9 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 export async function fixture(t) {
-  const root = await mkdtemp(path.join(tmpdir(), 'nmlb-test-'));
+  const root = await mkdtemp(path.join(await realpath(tmpdir()), 'nmlb-test-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   return root;
 }

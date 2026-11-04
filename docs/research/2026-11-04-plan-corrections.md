@@ -48,7 +48,8 @@ por separado; no se presume independencia a partir de esta auto-revisión.
 
 Criterio de cierre documental: diez hallazgos mapeados sin contradicciones abiertas,
 plan/spec consistentes y diff sin código/workflows. Criterio funcional: permanece
-pendiente y se prueba en cada PR de implementación, con G0–G5 pre/post.
+pendiente y se prueba en cada PR de implementación con los gates aplicables;
+G5 repite los gates requeridos después de la integración.
 
 ## Identidad de las entradas preservadas
 
