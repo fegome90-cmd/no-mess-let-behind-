@@ -17,7 +17,10 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "verify": "pnpm run lint && pnpm run typecheck && pnpm test && pnpm run build",
-    "test:e2e": "node --test tests/e2e/*.test.mjs"
+    "test:e2e": "node --test tests/e2e/*.test.mjs",
+    "test:headless": "node --test tests/headless/*.test.mjs",
+    "verify:headless": "pnpm verify && pnpm test:headless",
+    "doctor": "node tools/doctor.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.6",
