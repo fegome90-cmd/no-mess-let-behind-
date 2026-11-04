@@ -55,3 +55,27 @@ operaciones, no payloads: esa segunda comprobación no se infiere del JSON del p
 Los resultados reales se leen en el artefacto `provider-evidence-<revisión>-<SHA>`
 de cada CI. Los casos de auditoría y límites están en
 [el contrato de reparación](research/2026-11-04-provider-fixes.md).
+
+## Índice de Git (sólo alcance)
+
+```sh
+node tools/staged.mjs --vault /ruta/al/repo --git /usr/bin/git --protect 00_KERNEL
+```
+
+La inspección trabaja sobre blobs staged, no sobre la versión corregida pero aún
+no preparada del working tree. Revisa el origen y destino de renombres, borrados,
+modos de archivo, límites de tamaño y entradas ambiguas. No cambia el índice ni
+instala hooks. `scopeStatus: PASS` sólo aprueba alcance; `quality` y `secrets`
+permanecen `NOT_RUN`. No usar esta salida como aprobación completa de un commit.
+
+`profiles/git/pre-commit.example.yaml` es una entrada local opcional que se revisa
+y combina con el gestor existente. No sustituye su configuración ni los chequeos
+editoriales/secretos. Requiere que estas herramientas existan en el checkout; no
+contiene descarga o instalación automática.
+
+Se utiliza el índice efectivo de Git: GIT_INDEX_FILE se resuelve respecto del
+directorio de invocación y se valida dentro del gitdir de este worktree. Esto
+incluye los índices temporales de commit --only y -a. Índices externos, ausentes
+cuando se declararon explícitamente, enlaces y contextos no soportados fallan
+sin volver silenciosamente al índice ordinario. No se hereda todo el entorno.
+La inspección verifica también los bytes del índice antes y después.
