@@ -26,9 +26,10 @@ que puedan contener datos privados.
 - **Constitución Agéntica v1.1:** autoridades y aplicación local en [GOVERNANCE.md](GOVERNANCE.md).
 - **My Skills y plugins de trabajo:** selección y procedencia en [SKILLS.md](SKILLS.md).
 
-Rulesync, Vale y rumdl siguen siendo proveedores **candidatos**, no dependencias
-instaladas ni adaptadores probados. No hay motor, DSL de políticas, traductor de
-hooks, linter, daemon, servidor MCP ni base de datos propios.
+Rulesync, Vale y rumdl siguen siendo proveedores **candidatos del plugin**. Sus
+contratos headless se prueban por separado, sin habilitarlos en el runtime. No hay
+motor, DSL de políticas, traductor de hooks, linter, daemon, servidor MCP ni base
+de datos propios.
 
 ## Desarrollo
 
@@ -62,9 +63,11 @@ utiliza un perfil aislado. No acepta rutas de vaults de trabajo. Prueba comandos
 reportes, desactivación/reactivación, reinicio y preservación de bytes; no instala
 Claudian ni certifica hooks de agentes. Genera recibos y capturas en `artifacts/e2e/`.
 
-La CI prueba la composición propuesta con la base en cada PR y repite unitarios,
-build y E2E de ambas versiones después del merge. Se requiere revisar el resultado
-del SHA integrado antes de continuar la serie. No hay merge automático.
+La CI `Verify` de producto prueba la composición propuesta hacia develop/main y
+repite unitarios, build y E2E de ambas versiones después del merge. La rama aislada
+`integration/headless-foundation` usa `Headless`: verifica HEAD, composición y
+commit integrado sin abrir Obsidian. Sus resultados no sustituyen los E2E nativos
+pendientes de promoción. No hay merge automático.
 
 ## Continuidad
 
@@ -83,3 +86,33 @@ su activación depende de integrar la configuración en la rama predeterminada.
 incorpora Claudian y sus transportes al diseño. Incluye pruebas reproducidas y
 bloqueos de adopción del prototipo; no instala HookFlow ni amplía las capacidades
 de esta base. El runtime del plugin permanece de solo lectura.
+
+## Desarrollo sin ejecutar Obsidian
+
+La serie headless añade herramientas explícitas de diagnóstico, procesos acotados,
+inspección del índice Git, empaquetado e instalación inicial reversible. **No se
+activan al cargar el plugin**, ni convierten configuraciones presentes en hooks
+verificados. No añade dependencias npm al producto.
+
+```sh
+pnpm verify:headless
+```
+
+[Uso y límites de las herramientas](docs/headless.md) ·
+[Plan de cuatro PR](docs/plans/2026-11-03-headless.md).
+
+Los perfiles incluidos son fixtures sintéticos/advisory, no políticas de producción.
+La instalación es dry-run por defecto y requiere paquete revisado, confirmación del
+plan y declaración de aplicación cerrada; nunca autoactiva o instala hooks globales.
+
+## Plan vigente de integración del producto
+
+El [plan de tres hitos v2](docs/plans/2026-11-04-three-milestones-v2.md) incorpora
+las correcciones aceptadas de la auditoría. Es la secuencia vigente del trabajo
+pendiente; el [contrato](docs/specs/2026-11-04-governance-integration.md) define
+propiedad, preferencias, acciones y reversión. La [matriz AF-01–AF-10](docs/research/2026-11-04-plan-corrections.md)
+identifica las pruebas que deben cerrar cada cambio.
+
+Esta revisión es documental: no activa preferencias, proveedores, escrituras ni
+hooks en el runtime. A1 (promoción a develop con E2E) sigue pendiente. Los planes
+2026-11-03 conservan el historial, no constituyen una segunda secuencia futura.

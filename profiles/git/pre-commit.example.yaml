@@ -1,0 +1,11 @@
+# Example scope-only check. Merge manually; never replace existing hooks.
+repos:
+  - repo: local
+    hooks:
+      - id: nmlb-staged-scope
+        name: NMLB staged scope (not editorial/security approval)
+        language: system
+        entry: node tools/staged.mjs --vault . --protect 00_KERNEL
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

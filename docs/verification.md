@@ -77,3 +77,73 @@ fijos y sintéticos. No se ocultan ni se fuerza un cambio mayor de transitivas p
 silenciar el scanner. El gate automatizado rechaza avisos altos/críticos; esta
 clasificación de alcance no es una afirmación de ausencia de vulnerabilidades.
 Las actualizaciones se siguen por Dependabot y deben repetir E2E y audit.
+
+## A1 — Contrato de promoción a develop · 2026-11-04
+
+Las secciones anteriores conservan evidencia histórica; no describen por sí solas
+el estado actual de una rama. El estado de A1 lo determinan el SHA integrado y sus
+checks/recibos, enlazados en la PR de promoción, no esta entrada prospectiva.
+
+Encargo explícito de Felipe: planificar, auditar, verificar y aplicar A1 del
+[plan v2](plans/2026-11-04-three-milestones-v2.md). Base observada:
+`develop@705072ad28ae16f55f1a389e810d541b00a989cf`; origen funcional:
+`integration/headless-foundation@8691e4eb330e538df4007a89bf9e1ca42e9a81f0`.
+La promoción incluye esa base, este registro y la reparación acotada de rutas
+del índice descrita abajo; no introduce B0, configuración global, hooks activos,
+release o cambios en main.
+
+### Preflight y revisión
+
+El diff de promoción no altera src/, manifest.json, styles.css, bundler,
+dependencias fijadas ni el workflow Verify. Incorpora módulos headless ya revisados
+y su workflow, que también se ejecuta en PR y push a develop. La revisión externa
+detectó un rechazo incorrecto de índices explícitos que atraviesan un ancestro
+simbólico. Se reprodujo antes de corregir (RED) y se repara sólo su resolución de
+ruta y el helper de temporales; no se relajan los controles del índice final.
+
+La copia de inspección usa un worktree de snapshot validado contra el árbol remoto,
+no un clon del historial. Los ensayos Node22 locales de pruebas headless son
+suplementarios; la aprobación depende de Node24.22.2/pnpm11.25.0 en CI limpia.
+
+### Gates obligatorios y cierre
+
+1. Headless sobre HEAD y composición: lock congelado, 89 headless + 15 contratos,
+   lint/tipos/build, audit sin high/critical, cuatro proveedores reales y paquete.
+   Leer el recibo de proveedores: ninguna fila requerida puede estar omitida.
+2. Verify sobre HEAD y composición; E2E real del bundle en Obsidian1.8.7 y1.14.5
+   sobre la composición: seis escenarios por versión, fuentes y fixtures intactos.
+3. Revisar diff y comentarios; un check CodeRabbit SKIPPED o por cuota no se cuenta
+   como aprobación. La revisión propia y la independiente se registran por separado.
+4. Fusionar sólo el HEAD revisado tras comprobar que la base no cambió. Repetir
+   Headless y Verify/E2E sobre el SHA real de develop; no continuar B0 ante un fallo.
+5. Comparar recibos, checksums y source.zip antes/después de integrar. Separadamente,
+   comprobar contra la base completa 705072ad28ae16f55f1a389e810d541b00a989cf:
+   `git diff --exit-code <base> <integrado> -- src manifest.json styles.css
+   esbuild.config.mjs pnpm-lock.yaml pnpm-workspace.yaml .github/workflows/verify.yml`.
+   Comparar también los objetos dependencies/devDependencies/optionalDependencies/
+   peerDependencies/engines y packageManager de package.json: deben ser idénticos.
+   Excepción explícita: los scripts headless añadidos en package.json son parte
+   intencional de la promoción; no se exige igualdad del archivo completo.
+   Confirmar main en ef5ed81 y registrar run IDs, SHA y límites en el cierre.
+
+Estos E2E usan un vault y perfil sintéticos en Linux CI; no abren vaults del usuario
+ni certifican hosts Claude/Claudian/Codex/Pi. Los tres avisos moderados heredados de
+desarrollo se vuelven a consultar; no se declara ausencia universal de defectos.
+Esta sección no afirma que los gates futuros hayan pasado: consultar la ejecución
+observada por SHA y el recibo final de la PR.
+
+### Hallazgos de revisión A1 y regresión de rutas
+
+La revisión CodeRabbit añadió tres precisiones documentales (gates aplicables,
+adquisición de proveedores y comparación contra base), además de dos hallazgos
+relacionados con rutas de temporales/índice. Se canonicaliza el padre de un
+GIT_INDEX_FILE explícito antes de confinarlo al gitdir; el componente final sigue
+sometido a lstat y no puede ser un enlace. El índice por defecto no cambia.
+El helper de tests crea temporales desde realpath(tmpdir()), sin ocultar el caso:
+las nuevas regresiones construyen deliberadamente ancestros simbólicos.
+
+Cuatro regresiones verifican índice con ruta absoluta/relativa alias, rechazo de
+índice-final simbólico o fuera del gitdir, y helper con TMPDIR alias. RED observado:
+tres fallos y un control negativo correcto; GREEN después de la reparación.
+Es una corrección headless de integración; no modifica src ni el bundle del inspector.
+La reproducción usa Linux y enlaces sintéticos, no una ejecución macOS no observada.

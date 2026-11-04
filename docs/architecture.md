@@ -96,3 +96,15 @@ Las regresiones unitarias y E2E cubren cierre y nueva activación.
 El [plan de PR](plans/2026-11-03-integration-pr-sequence.md) fija revisión y tests
 antes y después de cada merge. Los proveedores de agentes siguen NO IMPLEMENTADOS;
 la ejecución real de Obsidian no cambia ese estado.
+
+## Plan posterior a la auditoría — 2026-11-04
+
+El [plan v2](plans/2026-11-04-three-milestones-v2.md) y su
+[contrato de diseño](specs/2026-11-04-governance-integration.md) desarrollan la
+expansión futura: lifecycle de preferencias antes de saveData, catálogo metadata-only,
+impacto estimado antes del preview real, spike Electron, escritor único por plan y
+rollback selectivo, y Claude CLI separado de Claudian/SDK.
+
+**No altera el contrato activo descrito arriba:** el inspector y los módulos
+headless permanecen iguales. Los verbos de implementación del plan son tareas
+pendientes, no autorizaciones implícitas para instalar o escribir en un vault real.

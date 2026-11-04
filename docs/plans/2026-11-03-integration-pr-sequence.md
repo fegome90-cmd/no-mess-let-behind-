@@ -1,5 +1,10 @@
 # Integraciones NMLB por PR y gates antes/después del merge
 
+> **Referencia histórica.** La secuencia de trabajo pendiente se consolida en
+> [el plan v2 de tres hitos](2026-11-04-three-milestones-v2.md). Las entregas y
+> pruebas ya registradas aquí se conservan; no se reabren ni se duplican.
+
+
 Fecha: 2026-11-03. Autoridad: Felipe solicitó «organiza las integraciones por PR,
 revisa cada uno y testea la ejecucion completa previo y post cada merge».
 Esta instrucción autoriza merges condicionados en este repositorio y pruebas en
