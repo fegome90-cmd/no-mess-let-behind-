@@ -104,3 +104,15 @@ pnpm verify:headless
 Los perfiles incluidos son fixtures sintéticos/advisory, no políticas de producción.
 La instalación es dry-run por defecto y requiere paquete revisado, confirmación del
 plan y declaración de aplicación cerrada; nunca autoactiva o instala hooks globales.
+
+## Plan vigente de integración del producto
+
+El [plan de tres hitos v2](docs/plans/2026-11-04-three-milestones-v2.md) incorpora
+las correcciones aceptadas de la auditoría. Es la secuencia vigente del trabajo
+pendiente; el [contrato](docs/specs/2026-11-04-governance-integration.md) define
+propiedad, preferencias, acciones y reversión. La [matriz AF-01–AF-10](docs/research/2026-11-04-plan-corrections.md)
+identifica las pruebas que deben cerrar cada cambio.
+
+Esta revisión es documental: no activa preferencias, proveedores, escrituras ni
+hooks en el runtime. A1 (promoción a develop con E2E) sigue pendiente. Los planes
+2026-11-03 conservan el historial, no constituyen una segunda secuencia futura.
