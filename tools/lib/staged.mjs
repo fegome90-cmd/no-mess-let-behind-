@@ -1,15 +1,48 @@
 import { createHash } from 'node:crypto';
+import { realpath } from 'node:fs/promises';
 import path from 'node:path';
-import { BoundaryError, canonicalRoot, relativePath } from './files.mjs';
+import { BoundaryError, canonicalRoot, confinedPath, readBounded, relativePath } from './files.mjs';
 import { runBounded } from './runner.mjs';
 
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 /** Inspect the Git index; PASS here means scope-only, never editorial/security approval. */
 export async function inspectIndex(
   root,
-  { git = '/usr/bin/git', protectedPaths = [], maxBlobBytes = 1_048_576 } = {},
+  {
+    git = '/usr/bin/git',
+    protectedPaths = [],
+    maxBlobBytes = 1_048_576,
+    environment = process.env,
+  } = {},
 ) {
+  const invocationCwd = process.cwd();
+  if (!environment || typeof environment !== 'object') throw new BoundaryError('NMLB_GIT_ENV');
+  const context = {};
+  for (const name of [
+    'GIT_INDEX_FILE',
+    'GIT_DIR',
+    'GIT_COMMON_DIR',
+    'GIT_WORK_TREE',
+    'GIT_OBJECT_DIRECTORY',
+    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+    'GIT_NAMESPACE',
+    'GIT_SHALLOW_FILE',
+  ]) {
+    if (environment[name] !== undefined) context[name] = environment[name];
+  }
+  for (const [name, value] of Object.entries(context)) {
+    if (
+      typeof value !== 'string' ||
+      !value ||
+      value.length > 4096 ||
+      [...value].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127) ||
+      !['GIT_INDEX_FILE', 'GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE'].includes(name)
+    ) {
+      throw new BoundaryError('NMLB_GIT_ENV');
+    }
+  }
   const cwd = await canonicalRoot(root);
+  let selectedEnv = {};
   for (const prefix of protectedPaths) relativePath(prefix);
   if (!Number.isSafeInteger(maxBlobBytes) || maxBlobBytes < 1 || maxBlobBytes > 8_388_608)
     throw new BoundaryError('NMLB_LIMIT');
@@ -18,6 +51,7 @@ export async function inspectIndex(
       executable: git,
       cwd,
       maxBytes,
+      env: selectedEnv,
       args: [
         '--no-optional-locks',
         '--no-pager',
@@ -33,6 +67,53 @@ export async function inspectIndex(
   };
   const top = (await invoke(['rev-parse', '--show-toplevel'])).trim();
   if (path.resolve(top) !== cwd) throw new BoundaryError('NMLB_GIT_ROOT');
+  const gitDir = await canonicalRoot((await invoke(['rev-parse', '--absolute-git-dir'])).trim());
+  const commonDir = await canonicalRoot(
+    (await invoke(['rev-parse', '--path-format=absolute', '--git-common-dir'])).trim(),
+  );
+  for (const [name, expected] of [
+    ['GIT_DIR', gitDir],
+    ['GIT_COMMON_DIR', commonDir],
+    ['GIT_WORK_TREE', cwd],
+  ]) {
+    if (context[name] !== undefined) {
+      let actual;
+      try {
+        actual = await realpath(path.resolve(invocationCwd, context[name]));
+      } catch {
+        throw new BoundaryError('NMLB_GIT_ENV');
+      }
+      if (actual !== expected) throw new BoundaryError('NMLB_GIT_ENV');
+    }
+  }
+  // Git exports temporary indices for --only/-a. Resolve relative to the caller,
+  // constrain to this worktree's gitdir, and never silently fall back to index.
+  const requested =
+    context.GIT_INDEX_FILE === undefined
+      ? path.join(gitDir, 'index')
+      : path.resolve(invocationCwd, context.GIT_INDEX_FILE);
+  const indexRelative = path.relative(gitDir, requested).split(path.sep).join('/');
+  try {
+    relativePath(indexRelative);
+  } catch {
+    throw new BoundaryError('NMLB_GIT_INDEX_PATH');
+  }
+  let indexPath;
+  try {
+    indexPath = await confinedPath(gitDir, indexRelative, context.GIT_INDEX_FILE === undefined);
+  } catch {
+    throw new BoundaryError('NMLB_GIT_INDEX');
+  }
+  const indexBytes = async () => {
+    try {
+      return await readBounded(gitDir, indexRelative, 32 * 1024 * 1024);
+    } catch (error) {
+      if (context.GIT_INDEX_FILE === undefined && error.code === 'ENOENT') return null;
+      throw new BoundaryError('NMLB_GIT_INDEX');
+    }
+  };
+  const originalBytes = await indexBytes();
+  selectedEnv = { GIT_INDEX_FILE: indexPath };
   const before = await invoke(['ls-files', '--stage', '-z']);
   const raw = await invoke([
     'diff',
@@ -96,7 +177,12 @@ export async function inspectIndex(
     changes.push(row);
   }
   const after = await invoke(['ls-files', '--stage', '-z']);
-  if (after !== before) throw new BoundaryError('NMLB_INDEX_CHANGED');
+  const finalBytes = await indexBytes();
+  if (
+    after !== before ||
+    (originalBytes === null ? finalBytes !== null : !finalBytes?.equals(originalBytes))
+  )
+    throw new BoundaryError('NMLB_INDEX_CHANGED');
   return {
     schema: 'nmlb-staged/1',
     scopeStatus: findings.length ? 'FAIL' : 'PASS',

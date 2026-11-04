@@ -1,6 +1,6 @@
 {
   "version": 1,
   "hooks": {
-    "preToolUse": [{ "command": "node ./fixture-hook.mjs" }]
+    "preToolUse": [{ "command": "echo NMLB_MANAGED_FIXTURE" }]
   }
 }
