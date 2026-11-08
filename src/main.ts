@@ -1,5 +1,6 @@
 import { Modal, Notice, Plugin } from 'obsidian';
 import { inspectVault, type SurfaceStatus } from './features/inventory/inventory.js';
+import { listProfileMetadata } from './features/profiles/catalog.js';
 
 class InventoryModal extends Modal {
   constructor(
@@ -37,6 +38,10 @@ class BoundariesModal extends Modal {
   onOpen(): void {
     this.contentEl.addClass('nmlb-report');
     this.contentEl.createEl('h2', { text: 'Alcance de esta base' });
+    this.contentEl.createEl('p', {
+      text: `Catálogo local: ${listProfileMetadata().length} perfiles de ejemplo; solo metadatos, ninguna regla instalada.`,
+      cls: 'nmlb-catalog-summary',
+    });
     this.contentEl.createEl('p', {
       text: 'No instala hooks, ejecuta procesos, cambia configuraciones, formatea notas ni certifica su contenido.',
     });

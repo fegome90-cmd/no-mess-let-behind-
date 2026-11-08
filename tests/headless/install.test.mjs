@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { access, mkdir, readdir, readFile, rm, symlink } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 import {
   install,
   packageBuild,
@@ -104,11 +106,11 @@ test('unknown target and unrelated extra files are never overwritten/removed', a
   await assert.rejects(planInstall(s), /NMLB_TARGET_EXISTS/);
   await assert.rejects(planRemove(s), /NMLB_OWNERSHIP/);
 });
-test('modified installed assets and extra user settings block removal', async (t) => {
+test('unknown extra user files block removal', async (t) => {
   const s = await setup(t);
   const plan = await planInstall(s);
   await install({ ...s, apply: true, appClosed: true, expectedPlan: plan.planId });
-  await put(s.vault, `.obsidian/plugins/${id}/data.json`, '{"user":"settings"}');
+  await put(s.vault, `.obsidian/plugins/${id}/user.json`, '{"user":"settings"}');
   await assert.rejects(planRemove(s), /NMLB_OWNERSHIP/);
 });
 test('active plugin must be disabled before file installation/removal', async (t) => {
@@ -181,3 +183,124 @@ test('packager rejects damaged UTF-8 manifests instead of replacing invalid byte
   await assert.rejects(packageBuild(s.build, output), /NMLB_MANIFEST/);
   await assert.rejects(access(output));
 });
+
+async function installed(t) {
+  const s = await setup(t);
+  const p = await planInstall(s);
+  await install({ ...s, apply: true, appClosed: true, expectedPlan: p.planId });
+  return { ...s, target: path.join(s.vault, '.obsidian/plugins', id) };
+}
+const apply = (s, plan) => ({ ...s, apply: true, appClosed: true, expectedPlan: plan.planId });
+test('B0: preferences allow NOOP, retained removal and same-package reinstall', async (t) => {
+  const s = await installed(t);
+  const bytes = '{"schemaVersion":1,"selectedProfileId":"fixture-editorial"}\n';
+  await put(s.target, 'data.json', bytes);
+  const noop = await planInstall(s);
+  assert.equal(noop.action, 'NOOP');
+  assert.equal((await install(apply(s, noop))).status, 'NOOP');
+  const removal = await planRemove(s);
+  assert(!JSON.stringify(removal).includes('fixture-editorial'));
+  assert.equal((await remove(apply(s, removal))).status, 'REMOVED_WITH_DATA_RETAINED');
+  assert.deepEqual((await readdir(s.target)).sort(), ['.nmlb-receipt.json', 'data.json']);
+  assert.equal(await readFile(path.join(s.target, 'data.json'), 'utf8'), bytes);
+  const retained = JSON.parse(await readFile(path.join(s.target, '.nmlb-receipt.json')));
+  assert.equal(retained.state, 'RETAINED_DATA');
+  const reinstall = await planInstall(s);
+  assert.equal(reinstall.action, 'REINSTALL');
+  assert.equal((await install(apply(s, reinstall))).status, 'INSTALLED');
+  assert.equal(await readFile(path.join(s.target, 'data.json'), 'utf8'), bytes);
+  assert.equal((await planInstall(s)).action, 'NOOP');
+});
+test('B0: preferences changing after removal preview invalidate approval', async (t) => {
+  const s = await installed(t);
+  await put(s.target, 'data.json', '{"old":1}');
+  const p = await planRemove(s);
+  await put(s.target, 'data.json', '{"new":2}');
+  await assert.rejects(remove(apply(s, p)), /NMLB_PLAN/);
+  await access(path.join(s.target, 'main.js'));
+  assert.equal(await readFile(path.join(s.target, 'data.json'), 'utf8'), '{"new":2}');
+});
+test('B0: retained preferences cannot authorize an upgrade or unknown extra file', async (t) => {
+  const s = await installed(t);
+  await put(s.target, 'data.json', '{}');
+  await remove(apply(s, await planRemove(s)));
+  await put(s.build, 'main.js', 'different package');
+  const other = path.join(s.root, 'other-package');
+  await packageBuild(s.build, other);
+  await assert.rejects(planInstall({ ...s, packageDir: other }), /NMLB_TARGET_EXISTS/);
+  await put(s.target, 'foreign.txt', 'KEEP');
+  await assert.rejects(planInstall(s), /NMLB_TARGET_EXISTS/);
+  await access(path.join(s.target, 'data.json'));
+});
+test('B0: retained data changed after reinstall preview is preserved and blocks apply', async (t) => {
+  const s = await installed(t);
+  await put(s.target, 'data.json', '{}');
+  await remove(apply(s, await planRemove(s)));
+  const p = await planInstall(s);
+  await put(s.target, 'data.json', '{"changed":true}');
+  await assert.rejects(install(apply(s, p)), /NMLB_PLAN/);
+  await assert.rejects(access(path.join(s.target, 'main.js')));
+});
+test('B0: preferences with symlink, oversized or invalid JSON/UTF-8 block mutation', async (t) => {
+  const s = await installed(t);
+  for (const bytes of [Buffer.alloc(1_048_577, 32), Buffer.from('{bad'), Buffer.from([0x80])]) {
+    await put(s.target, 'data.json', bytes);
+    await assert.rejects(planRemove(s), /NMLB_OWNERSHIP/);
+    assert.deepEqual(await readFile(path.join(s.target, 'data.json')), bytes);
+  }
+  await rm(path.join(s.target, 'data.json'));
+  await symlink(path.join(s.vault, 'note.md'), path.join(s.target, 'data.json'));
+  await assert.rejects(planRemove(s), /NMLB_OWNERSHIP/);
+});
+test('B0: malformed retained receipt does not confer ownership', async (t) => {
+  const s = await installed(t);
+  await put(s.target, 'data.json', '{}');
+  await remove(apply(s, await planRemove(s)));
+  await put(s.target, '.nmlb-receipt.json', '{"schema":"nmlb-install/2","state":"RETAINED_DATA"}');
+  await assert.rejects(planInstall(s), /NMLB_TARGET_EXISTS/);
+  assert.equal(await readFile(path.join(s.target, 'data.json'), 'utf8'), '{}');
+});
+test('B0: original v1 receipt remains compatible when preferences appear', async (t) => {
+  const s = await installed(t);
+  const r = JSON.parse(await readFile(path.join(s.target, '.nmlb-receipt.json')));
+  r.schema = 'nmlb-install/1';
+  delete r.state;
+  await put(s.target, '.nmlb-receipt.json', JSON.stringify(r));
+  await put(s.target, 'data.json', '{}');
+  assert.equal((await planInstall(s)).action, 'NOOP');
+  assert.equal((await remove(apply(s, await planRemove(s)))).status, 'REMOVED_WITH_DATA_RETAINED');
+});
+for (const operation of ['remove', 'install']) {
+  test(`B0: ${operation} publication fault restores assets without changing preferences`, async (t) => {
+    const s = await installed(t);
+    await put(s.target, 'data.json', '{"keep":"UNCHANGED"}');
+    if (operation === 'install') await remove(apply(s, await planRemove(s)));
+    const plan = operation === 'remove' ? await planRemove(s) : await planInstall(s);
+    const before = new Map();
+    for (const name of await readdir(s.target))
+      before.set(name, await readFile(path.join(s.target, name)));
+    const child = `
+      import fs from 'node:fs/promises';
+      import { syncBuiltinESMExports } from 'node:module';
+      const link = fs.link; let injected = false;
+      fs.link = async (source, dest) => {
+        if (!injected && source.includes('/new/') && dest.endsWith('.nmlb-receipt.json')) {
+          injected = true; throw Object.assign(new Error('SYNTHETIC_IO'), { code: 'ENOSPC' });
+        }
+        return link(source, dest);
+      };
+      syncBuiltinESMExports();
+      const module = await import(${JSON.stringify(pathToFileURL(path.resolve('tools/lib/install.mjs')).href)});
+      try { await module[${JSON.stringify(operation)}](${JSON.stringify(apply(s, plan))}); process.exitCode = 2; }
+      catch { if (!injected) process.exitCode = 3; }
+    `;
+    const result = spawnSync(process.execPath, ['--input-type=module', '-e', child], {
+      timeout: 5000,
+    });
+    assert.equal(result.status, 0);
+    assert.deepEqual((await readdir(s.target)).sort(), [...before.keys()].sort());
+    for (const [name, bytes] of before)
+      assert.deepEqual(await readFile(path.join(s.target, name)), bytes);
+    assert.equal((await planInstall(s)).action, operation === 'remove' ? 'NOOP' : 'REINSTALL');
+  });
+}

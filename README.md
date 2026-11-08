@@ -58,8 +58,8 @@ Las pruebas simulan la superficie de Obsidian; **no prueban la aplicación real*
 NMLB_OBSIDIAN_VERSION=1.8.7 pnpm test:e2e
 ```
 
-El harness crea únicamente fixtures sintéticos y el launcher copia el vault y
-utiliza un perfil aislado. No acepta rutas de vaults de trabajo. Prueba comandos,
+El harness crea únicamente fixtures sintéticos y usa un perfil aislado. El E2E
+de lifecycle abre in-place sólo su vault temporal recién generado; los otros usan copia. No acepta rutas de vaults de trabajo. Prueba comandos,
 reportes, desactivación/reactivación, reinicio y preservación de bytes; no instala
 Claudian ni certifica hooks de agentes. Genera recibos y capturas en `artifacts/e2e/`.
 
@@ -67,7 +67,7 @@ La CI `Verify` de producto prueba la composición propuesta hacia develop/main y
 repite unitarios, build y E2E de ambas versiones después del merge. La rama aislada
 `integration/headless-foundation` usa `Headless`: verifica HEAD, composición y
 commit integrado sin abrir Obsidian. Sus resultados no sustituyen los E2E nativos
-pendientes de promoción. No hay merge automático.
+completados para A1 en PR #14. No hay merge automático.
 
 ## Continuidad
 
@@ -113,6 +113,10 @@ pendiente; el [contrato](docs/specs/2026-11-04-governance-integration.md) define
 propiedad, preferencias, acciones y reversión. La [matriz AF-01–AF-10](docs/research/2026-11-04-plan-corrections.md)
 identifica las pruebas que deben cerrar cada cambio.
 
-Esta revisión es documental: no activa preferencias, proveedores, escrituras ni
-hooks en el runtime. A1 (promoción a develop con E2E) sigue pendiente. Los planes
-2026-11-03 conservan el historial, no constituyen una segunda secuencia futura.
+A1 está completado en PR #14. El [roadmap operativo](docs/ROADMAP.md) y el
+[plan B0–B2](docs/plans/2026-11-08-h2-execution.md) distinguen candidatos de
+capacidades integradas. Los planes 2026-11-03 conservan el historial.
+
+El catálogo local contiene cuatro perfiles **fixture-only** como metadatos, no
+reglas instaladas. El instalador B0 preserva data.json al retirar y reinstalar
+el mismo paquete. No hay upgrade ni eliminación automática de preferencias.

@@ -116,9 +116,12 @@ después de la revisión; en esta entrega no se ha instalado en ningún vault re
 
 Retiro: generar un segundo plan con `--remove` (sin `--package`), revisar su ID y
 repetir con `--apply --app-closed --expect ...`. Sólo retira los archivos propios
-cuando todos conservan sus hashes y no hay entradas adicionales. `data.json`,
-cambios manuales u otros archivos bloquean el retiro para revisión humana; no se
-borran para dejar el directorio limpio. No limpia automáticamente locks abandonados.
+cuando todos conservan sus hashes. B0 admite data.json regular, JSON objeto y hasta
+1 MiB: conserva sus bytes in situ y devuelve REMOVED_WITH_DATA_RETAINED. Deja un
+recibo nmlb-install/2 RETAINED_DATA; permite reinstalar sólo el mismo paquete tras
+un nuevo plan. Otros archivos, cambios manuales, enlaces o preferencias dañadas
+bloquean la operación. Nunca borrar preferencias para conseguir un directorio limpio.
+No limpia automáticamente locks abandonados.
 
 La repetición sobre el mismo paquete intacto devuelve `NOOP`. Un paquete distinto
 sobre una instalación existente requiere migración futura: no se implementó un
@@ -128,13 +131,27 @@ propietario malicioso del filesystem. No modificar el árbol durante la operaci�
 
 ## Estado de integración
 
-La serie se integra de forma secuencial en `integration/headless-foundation`.
+La serie headless fue promovida a develop por A1 (PR #14). B0–B2 se integran
+secuencialmente mediante PR a develop.
 Cada PR requiere verificación del HEAD, de su composición y del SHA integrado;
 los resultados observados se registran en su revisión y artefactos de CI. No se
-promueve a develop/main ni se publica una release en esta fase.
+promueve a main ni se publica una release en esta fase.
 
 Las herramientas headless no están enlazadas a comandos de la interfaz. Sus
 pruebas de filesystem, procesos, Git y proveedores no certifican ejecución bajo
 Obsidian/Claudian ni hooks nativos. El workflow de producto conserva sus gates.
 El empaquetador también rechaza UTF-8 dañado en el manifest; nunca sustituye
 bytes inválidos para aprobar un paquete.
+
+## B0: límites de la transición de assets
+
+El plan incorpora el hash del estado de preferencias, sin imprimir valores. Cambios
+posteriores a la aprobación invalidan el plan. NOOP sigue permitido al generar
+un plan nuevo con preferencias distintas. Los recibos originales /1 siguen legibles.
+
+Las transiciones preservan data.json in situ y usan un backup de assets y creación
+exclusiva de destinos; ante conflicto durante recuperación dejan backup y lock
+(NMLB_RECOVERY_REQUIRED) para inspección manual. No se promete recuperación tras
+SIGKILL/pérdida eléctrica ni aislamiento frente al propietario hostil del filesystem.
+--app-closed sigue siendo una declaración del operador. Las pruebas de I/O simulan
+fallo al publicar el recibo y comprueban restauración de assets y bytes de preferencias.
