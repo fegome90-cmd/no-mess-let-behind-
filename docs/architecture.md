@@ -108,3 +108,11 @@ rollback selectivo, y Claude CLI separado de Claudian/SDK.
 **No altera el contrato activo descrito arriba:** el inspector y los módulos
 headless permanecen iguales. Los verbos de implementación del plan son tareas
 pendientes, no autorizaciones implícitas para instalar o escribir en un vault real.
+
+## H2 / B0 — ownership de preferencias y catálogo
+
+El instalador sólo escribe assets y recibos propios; data.json se lee acotadamente
+para verificar estado y se conserva in situ, nunca se elimina o migra. Su writer
+permanece Plugin.saveData cuando la UI lo habilite en B1. El catálogo es TypeScript
+embebido de metadatos de fixtures fijados, no fuentes ejecutables ni políticas.
+El [roadmap](ROADMAP.md) separa implementación candidata, integración y futuros gates.
