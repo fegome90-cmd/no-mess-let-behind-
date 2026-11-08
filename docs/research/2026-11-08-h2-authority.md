@@ -83,3 +83,9 @@ un writer explícito de preferencias y exige nueva revisión; B2 permanece ESTIM
 No se certifica recuperación tras pérdida eléctrica ni seguridad contra filesystem
 hostil. Los tests Linux/macOS no acreditan Windows. Revisión propia no independiente;
 la revisión fresca y los resultados de CI deben identificarse por SHA en la PR.
+
+Revisión fresca: Codex gpt-6.1-sol, read-only sobre 59b1ce0, encontró dos P2 de
+evidencia (teardown y hash tardío), no un bloqueante de pérdida de datos dentro
+del contrato. Se corrigieron: recibo exige teardown exitoso y captura hash de
+paquete/identidad antes de ejecutar. Dos regresiones RED/GREEN; la revisión fue
+estática y no se le atribuyen las ejecuciones nativas del implementador.

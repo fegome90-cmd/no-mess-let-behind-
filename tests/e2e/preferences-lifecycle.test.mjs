@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -14,9 +13,10 @@ import {
   remove,
 } from '../../tools/lib/install.mjs';
 
+import { capturePackageIdentity, nativeOutcome } from './support/receipt.mjs';
+
 const id = 'no-mess-left-behind';
 const version = process.env.NMLB_OBSIDIAN_VERSION ?? '1.14.5';
-const hash = (value) => createHash('sha256').update(value).digest('hex');
 
 // In-place is allowed ONLY for this newly generated, disposable vault. It is never user supplied.
 test(
@@ -31,6 +31,13 @@ test(
     const options = { vault, packageDir, apply: true, appClosed: true };
     let browser;
     let actualVersion;
+    let identity = null;
+    let teardownPassed = false;
+    const sourceBefore = {
+      sourceSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+      sourceDirty:
+        execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0,
+    };
     const record = (name) => checks.push({ name, status: 'PASS' });
     const launch = async () => {
       const session = await startWdioSession({
@@ -70,6 +77,7 @@ test(
       for (const name of ['main.js', 'manifest.json', 'styles.css'])
         await writeFile(path.join(build, name), await readFile(name));
       await packageBuild(build, packageDir);
+      identity = await capturePackageIdentity(packageDir, sourceBefore);
       await install({ ...options, expectedPlan: (await planInstall(options)).planId });
       assert.deepEqual((await readdir(packageDir)).sort(), [
         'SHA256SUMS',
@@ -144,6 +152,8 @@ test(
     } finally {
       try {
         if (browser) await browser.deleteSession();
+        await rm(root, { recursive: true, force: true });
+        teardownPassed = true;
       } finally {
         await mkdir('artifacts/e2e', { recursive: true });
         await writeFile(
@@ -151,22 +161,19 @@ test(
           `${JSON.stringify(
             {
               schema: 'nmlb-preferences-e2e/1',
-              sourceSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
-              sourceDirty:
-                execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length >
-                0,
+              ...(identity ?? sourceBefore),
+              sourceAfter: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+              teardownPassed,
               platform: process.platform,
               requestedVersion: version,
               actualVersion,
-              bundleSha256: hash(await readFile('main.js')),
               checks,
-              status: checks.length === 4 ? 'PASS' : 'FAIL',
+              status: nativeOutcome(checks, 4, teardownPassed),
             },
             null,
             2,
           )}\n`,
         );
-        await rm(root, { recursive: true, force: true });
       }
     }
   },
