@@ -36,6 +36,11 @@ retiro a permanecer in situ. Ninguna selección confiere autoridad de ejecución
 
 ## 5. Duplications and Conflicts
 
+[MODIFIED] La revisión detectó que una lectura posterior a la revalidación podía
+aceptar otro snapshot de preferencias. Dos inyecciones deterministas reprodujeron
+la aceptación del plan anterior; se corrigió comparando el snapshot inmediato con
+plan.stateHash antes de cualquier transición. No se escribe data.json.
+
 [BASELINE] No doble escritor activo detectado en el alcance. La declaración app-closed
 y la comprobación de plugin deshabilitado son precondiciones, no garantía contra un
 actor hostil que cambie el filesystem. No se afirma transacción universal.

@@ -304,3 +304,38 @@ for (const operation of ['remove', 'install']) {
     assert.equal((await planInstall(s)).action, operation === 'remove' ? 'NOOP' : 'REINSTALL');
   });
 }
+
+for (const operation of ['remove', 'install']) {
+  test(`B0: ${operation} rejects preference drift during locked revalidation`, async (t) => {
+    const s = await installed(t);
+    await put(s.target, 'data.json', '{"old":1}');
+    if (operation === 'install') await remove(apply(s, await planRemove(s)));
+    const plan = operation === 'remove' ? await planRemove(s) : await planInstall(s);
+    const child = `
+      import fs from 'node:fs/promises';
+      import { syncBuiltinESMExports } from 'node:module';
+      const originalOpen = fs.open; let count = 0; let injected = false;
+      fs.open = async (filename, ...args) => {
+        if (String(filename) === ${JSON.stringify(path.join(s.target, '.nmlb-receipt.json'))}) {
+          count++;
+          if (count === 3) {
+            injected = true;
+            await fs.writeFile(${JSON.stringify(path.join(s.target, 'data.json'))}, '{"changed":true}');
+          }
+        }
+        return originalOpen(filename, ...args);
+      };
+      syncBuiltinESMExports();
+      const module = await import(${JSON.stringify(pathToFileURL(path.resolve('tools/lib/install.mjs')).href)});
+      try { await module[${JSON.stringify(operation)}](${JSON.stringify(apply(s, plan))}); process.exitCode = 2; }
+      catch (error) { if (!injected || error.code !== 'NMLB_PLAN') process.exitCode = 3; }
+    `;
+    const result = spawnSync(process.execPath, ['--input-type=module', '-e', child], {
+      timeout: 5000,
+    });
+    assert.equal(result.status, 0, 'drift during revalidation must reject the old approval');
+    assert.equal(await readFile(path.join(s.target, 'data.json'), 'utf8'), '{"changed":true}');
+    if (operation === 'remove') await access(path.join(s.target, 'main.js'));
+    else await assert.rejects(access(path.join(s.target, 'main.js')));
+  });
+}

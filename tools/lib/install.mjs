@@ -299,7 +299,9 @@ export async function install(options) {
     const receipt = JSON.stringify(receiptFor(pkg, 'INSTALLED'));
     const output = { ...pkg.data, [RECEIPT]: receipt };
     if (plan.action === 'REINSTALL') {
-      await transition(loc, await owned(loc.target), [RECEIPT], output);
+      const before = await owned(loc.target);
+      if (digest(JSON.stringify(before)) !== plan.stateHash) fail('NMLB_PLAN');
+      await transition(loc, before, [RECEIPT], output);
     } else {
       const plugins = await confinedPath(loc.root, `${configDir}/plugins`, true);
       await mkdir(plugins, { recursive: true });
@@ -333,6 +335,7 @@ export async function remove(options) {
   return locked(loc, async () => {
     if ((await planRemove(options)).planId !== plan.planId) fail('NMLB_PLAN');
     const before = await owned(loc.target);
+    if (digest(JSON.stringify(before)) !== plan.stateHash) fail('NMLB_PLAN');
     if (before.dataHash !== null) {
       const retained = { ...before.receipt, schema: 'nmlb-install/2', state: 'RETAINED_DATA' };
       await transition(loc, before, [...FILES, RECEIPT], { [RECEIPT]: JSON.stringify(retained) });
